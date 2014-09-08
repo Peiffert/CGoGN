@@ -42,15 +42,15 @@ namespace Geometry
 {
 
 template <typename PFP>
-bool isConvex(typename PFP::MAP& map, Vol v, const VertexAttribute<typename PFP::VEC3, typename PFP::MAP>& position, bool CCW, unsigned int thread)
+bool isConvex(typename PFP::MAP& map, Vol v, const VertexAttribute<typename PFP::VEC3, typename PFP::MAP>& position, bool CCW)
 {
 	//get all the dart of the volume
 	std::vector<Dart> vStore;
-	map.foreach_dart_of_orbit(v, [&] (Dart d) { vStore.push_back(d); }, thread);
+	map.foreach_dart_of_orbit(v, [&] (Dart d) { vStore.push_back(d); });
 
 	bool convex = true;
 
-	DartMarkerStore<typename PFP::MAP> m(map, thread);
+	DartMarkerStore<typename PFP::MAP> m(map);
 	for (std::vector<Dart>::iterator it = vStore.begin() ; it != vStore.end() && convex ; ++it)
 	{
 		Dart e = *it;
@@ -64,7 +64,7 @@ bool isConvex(typename PFP::MAP& map, Vol v, const VertexAttribute<typename PFP:
 	return convex;
 }
 
-// TODO add thread Pameter
+
 template <typename PFP>
 bool isPointInVolume(typename PFP::MAP& map, Vol v, const VertexAttribute<typename PFP::VEC3, typename PFP::MAP>& position, const typename PFP::VEC3& point)
 {
@@ -180,7 +180,7 @@ bool isPointInConvexFace(typename PFP::MAP& map, Face f, const VertexAttribute<t
 	if(o3d == Geom::ON)
 	{
 		Traversor2FV<typename PFP::MAP> tfv(map, f) ;
-		for(Vertex v = tfv.begin(); v != tfv.end(); v = tfv.next())
+		for(Vertex v = tfv.begin(); v.dart != tfv.end(); v = tfv.next())
 		{
 			VEC3 N = pl.normal();
 			VEC3 v2(position[map.phi1(v.dart)] - position[v]);
@@ -212,7 +212,7 @@ bool isPointInConvexFace2D(typename PFP::MAP& map, Face f, const VertexAttribute
 	Geom::Orientation2D o2d;
 
 	Traversor2FV<typename PFP::MAP> tfv(map, f) ;
-	for(Vertex v = tfv.begin(); v != tfv.end(); v = tfv.next())
+	for(Vertex v = tfv.begin(); v.dart != tfv.end(); v = tfv.next())
 	{
 		o2d = Geom::testOrientation2D(point, position[v], position[map.phi1(v.dart)]);
 		if(CCW)
@@ -284,7 +284,7 @@ bool isConvexFaceInOrIntersectingTetrahedron(typename PFP::MAP& map, Face f, con
 	typedef typename PFP::VEC3 VEC3 ;
 
 	Traversor2FV<typename PFP::MAP> tfv(map, f) ;
-	for(Vertex v = tfv.begin(); v != tfv.end(); v = tfv.next())
+	for(Vertex v = tfv.begin(); v.dart != tfv.end(); v = tfv.next())
 	{
 		if(Geom::isPointInTetrahedron(points, position[v], CCW))
 			return true;

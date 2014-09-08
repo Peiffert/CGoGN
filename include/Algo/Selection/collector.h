@@ -28,6 +28,8 @@
 #include "Container/fakeAttribute.h"
 #include "Geometry/basic.h"
 
+#include "Topology/generic/traversor/traversor2.h"
+
 /*****************************************
  * Class hierarchy :
  * Collector (virtual)
@@ -60,7 +62,6 @@ class Collector
 
 protected:
 	MAP& map;
-	unsigned int m_thread;
 
 	Dart centerDart;
 
@@ -72,7 +73,7 @@ protected:
 	std::vector<Dart> border;
 
 public:
-	Collector(MAP& m, unsigned int thread = 0);
+	Collector(MAP& m);
 
 	inline void init(Dart d)
 	{
@@ -151,8 +152,8 @@ class Collector_OneRing : public Collector<PFP>
 	typedef typename PFP::REAL REAL ;
 
 public:
-	Collector_OneRing(MAP& m, unsigned int thread = 0) :
-		Collector<PFP>(m, thread)
+	Collector_OneRing(MAP& m) :
+		Collector<PFP>(m)
 	{}
 	void collectAll(Dart d);
 	void collectBorder(Dart d);
@@ -183,8 +184,8 @@ class Collector_OneRing_AroundEdge : public Collector<PFP>
 	typedef typename PFP::REAL REAL ;
 
 public:
-	Collector_OneRing_AroundEdge(MAP& m, unsigned int thread = 0) :
-		Collector<PFP>(m, thread)
+	Collector_OneRing_AroundEdge(MAP& m) :
+		Collector<PFP>(m)
 	{}
 	void collectAll(Dart d);
 	void collectBorder(Dart d);
@@ -217,8 +218,8 @@ protected:
 	REAL radius;
 
 public:
-	Collector_WithinSphere(MAP& m, const VertexAttribute<VEC3, MAP>& p, REAL r = 0, unsigned int thread = 0) :
-		Collector<PFP>(m, thread),
+	Collector_WithinSphere(MAP& m, const VertexAttribute<VEC3, MAP>& p, REAL r = 0) :
+		Collector<PFP>(m),
 		position(p),
 		radius(r)
 	{}
@@ -259,9 +260,8 @@ public:
 	Collector_NormalAngle(
 		MAP& m,
 		const VertexAttribute<VEC3, MAP>& n,
-		REAL a,
-		unsigned int thread = 0
-	) :	Collector<PFP>(m, thread), normal(n), angleThreshold(a)
+		REAL a
+	) :	Collector<PFP>(m), normal(n), angleThreshold(a)
 	{}
 	inline void setAngleThreshold(REAL a) { angleThreshold = a; }
 	inline REAL getAngleThreshold() const { return angleThreshold; }
@@ -296,9 +296,8 @@ public:
 	Collector_NormalAngle_Triangles(
 		MAP& m,
 		const FaceAttribute<VEC3, MAP>& n,
-		REAL a,
-		unsigned int thread = 0
-	) :	Collector<PFP>(m, thread), normal(n), angleThreshold(a)
+		REAL a
+	) :	Collector<PFP>(m), normal(n), angleThreshold(a)
 	{}
 	inline void setAngleThreshold(REAL a) { angleThreshold = a; }
 	inline REAL getAngleThreshold() const { return angleThreshold; }
@@ -416,8 +415,8 @@ protected:
 	CollectorCriterion & crit;
 
 public:
-	Collector_Vertices(typename PFP::MAP& m, CollectorCriterion& c, unsigned int thread = 0) :
-		Collector<PFP>(m, thread),
+	Collector_Vertices(typename PFP::MAP& m, CollectorCriterion& c) :
+		Collector<PFP>(m),
 		crit(c)
 	{}
 	void collectAll(Dart d);
@@ -443,8 +442,8 @@ protected:
 	CollectorCriterion & crit;
 
 public:
-	Collector_Triangles(typename PFP::MAP& m, CollectorCriterion& c, unsigned int thread = 0) :
-		Collector<PFP>(m,thread), crit(c)
+	Collector_Triangles(typename PFP::MAP& m, CollectorCriterion& c) :
+		Collector<PFP>(m), crit(c)
 	{}
 	void collectAll(Dart d) ;
 	void collectBorder(Dart d) ;
@@ -484,8 +483,8 @@ protected:
 	std::multimap<float, Dart> front ;
 
 public:
-	Collector_Dijkstra_Vertices(MAP& m, const EdgeAttribute<REAL, MAP>& c, REAL d = 0, unsigned int thread = 0) :
-		Collector<PFP>(m, thread),
+	Collector_Dijkstra_Vertices(MAP& m, const EdgeAttribute<REAL, MAP>& c, REAL d = 0) :
+		Collector<PFP>(m),
 		edge_cost(c),
 		maxDist(d)
 	{
@@ -535,8 +534,8 @@ protected:
 	std::multimap<float, Dart> front ;
 
 public:
-	Collector_Dijkstra(MAP& m, const VertexAttribute<VEC3, MAP>& p, REAL d = 0, unsigned int thread=0) :
-		Collector<PFP>(m,thread),
+	Collector_Dijkstra(MAP& m, const VertexAttribute<VEC3, MAP>& p, REAL d = 0) :
+		Collector<PFP>(m),
 		position(p),
 		maxDist(d)
 	{

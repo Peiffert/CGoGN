@@ -112,15 +112,49 @@ void computeNewPositions(MAP& map, VertexAttribute<VEC3, MAP>& pos)
 template<typename ATTRIB>
 void dumpAttribute(const ATTRIB& attr)
 {
-	std::cout << "Attribute " <<attr.name() << " of orbit "<< orbitName(attr.getOrbit())<< " of type "<< attr.typeName()<< std::endl;
+	CHECK_ATTRIBUTEHANDLER(ATTRIB);
+
+	std::cout << "Attribute " << attr.name() << " of orbit " << orbitName(attr.getOrbit()) << " of type " << attr.typeName() << std::endl;
 
 	// NEVER USE 0 AND ++ IN FOR LOOP ON ATTRIBUTE !
 	// USE ONLY BEGIN / END / NEXT (for hole jumping over)
-	for (unsigned int i=attr.begin(); i!=attr.end(); attr.next(i))
+	for (unsigned int i = attr.begin(); i != attr.end(); attr.next(i))
 	{
-		std::cout << attr.name() << "["<< i << "] = "<<attr[i]<< std::endl;
+		std::cout << attr.name() << "[" << i << "] = " << attr[i] << std::endl;
 	}
 }
+
+
+//function that apply on vertice with templated attribute type
+template<typename T>
+void VertexTyped(MAP& map, T& va)
+{
+
+//	foreach_cell<VERTEX>(map,[&](Vertex v)  // for all vertices
+//	{
+//		va[v] = 1.1 * va[v];
+//	});
+
+	// other syntax for traversal
+	 for (Vertex v : allVerticesOf(map))
+	 {
+		 va[v] = 1.1 * va[v];
+		 std::cout << "V:" << v << " -> "<<va[v]<< std::endl;
+	 }
+}
+
+// version that take a VertexAttribute, check type at runtime and call instancied template version
+void VertexGeneric(MAP& map, VertexAttributeGen& vg)
+{
+	auto va3 = dynamic_cast<VertexAttribute<VEC3, MAP>*>(&vg);
+	if (va3 != NULL)
+		return VertexTyped(map,*va3);
+
+	auto vaf = dynamic_cast<VertexAttribute<float, MAP>*>(&vg);
+	if (vaf != NULL)
+		return VertexTyped(map,*vaf);
+}
+
 
 
 int main()
@@ -139,6 +173,8 @@ int main()
 	// and embed it using position attribute
 	grid.embedIntoGrid(positionAtt, 1.,1.,0.);
 
+
+	VertexGeneric(myMap,positionAtt);
 
 	// ATTRIBUTE DECLARATION
 

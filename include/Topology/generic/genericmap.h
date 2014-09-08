@@ -73,6 +73,7 @@ inline int getSystemNumberOfCores(bool hyperthreading=false)
 class AttributeHandlerGen ;
 class DartMarkerGen ;
 class CellMarkerGen ;
+class MapManipulator;
 
 class GenericMap
 {
@@ -90,6 +91,26 @@ protected:
 	// protected copy constructor to prevent the copy of map
 	GenericMap(const GenericMap& ) {}
 
+
+	/**
+	 *
+	 */
+	std::vector<std::thread::id> m_thread_ids;
+public:
+	/// compute thread index in the table of thread
+	inline unsigned int getCurrentThreadIndex() const;
+
+	/// add place for n new threads in the table of thread return index of first
+	inline unsigned int addEmptyThreadIds(unsigned int n);
+
+	/// remove  the n last added threads from table
+	inline void popThreadIds(unsigned int nb);
+
+	/// get ref to jth threadId for updating (in thread)
+	inline std::thread::id& getThreadId(unsigned int j);
+
+
+protected:
 	/**
 	 * Attributes Containers
 	 */
@@ -98,11 +119,12 @@ protected:
 	static std::map<std::string, RegisteredBaseAttribute*>* m_attributes_registry_map;
 	static int m_nbInstances;
 
-	// buffer for less memory allocation
+	/// buffer for less memory allocation
 	static  std::vector< std::vector<Dart>* >* s_vdartsBuffers;
 	static  std::vector< std::vector<unsigned int>* >* s_vintsBuffers;
 
-	// table of instancied maps for Dart/CellMarker release
+
+	/// table of instancied maps for Dart/CellMarker release
 	static std::vector<GenericMap*>* s_instances;
 
 
@@ -153,12 +175,11 @@ public:
 		return false;
 	}
 
-	static inline std::vector<Dart>* askDartBuffer(unsigned int orbit);
-	static inline void releaseDartBuffer(std::vector<Dart>* vd, unsigned int orbit);
+	inline std::vector<Dart>* askDartBuffer() const;
+	inline void releaseDartBuffer(std::vector<Dart>* vd) const;
 
-	static inline std::vector<unsigned int>* askUIntBuffer(unsigned int orbit);
-	static inline void releaseUIntBuffer(std::vector<unsigned int>* vd, unsigned int orbit);
-
+	inline std::vector<unsigned int>* askUIntBuffer() const;
+	inline void releaseUIntBuffer(std::vector<unsigned int>* vd) const;
 
 protected:
 	void init(bool addBoundaryMarkers=true);
@@ -176,6 +197,34 @@ public:
 	 */
 	virtual void clear(bool removeAttrib) ;
 
+
+	/****************************************
+	 *     MANIPULATOR MANAGEMENT           *
+	 ****************************************/
+protected:
+	/// manipulator pointer to Manipulator object that currently work on map
+	MapManipulator* m_manipulator;
+
+public:
+	/**
+	 * @brief ask for associating manipulator to the map
+	 * @param ptr Manipulator ptr
+	 * @return ok or not
+	 */
+	bool askManipulate(MapManipulator* ptr);
+
+	/**
+	 * @brief release the map from manipulator
+	 * @param ptr manipulator asking for release
+	 * @return ok or not
+	 */
+	bool releaseManipulate(MapManipulator* ptr);
+
+	/**
+	 * @brief get the manipulator
+	 * @return manipulator ptr
+	 */
+	MapManipulator* getManipulator();
 
 	/****************************************
 	 *           DARTS MANAGEMENT           *
@@ -292,13 +341,13 @@ public:
 	 * @brief ask for a marker attribute
 	 */
 	template <unsigned int ORBIT>
-	AttributeMultiVector<MarkerBool>* askMarkVector(unsigned int thread=0) ;
+	AttributeMultiVector<MarkerBool>* askMarkVector() ;
 
 	/**
 	 * @brief release allocated marker attribute
 	 */
 	template <unsigned int ORBIT>
-	void releaseMarkVector(AttributeMultiVector<MarkerBool>* amv, unsigned int thread=0);
+	void releaseMarkVector(AttributeMultiVector<MarkerBool>* amv);
 
 protected:
 	/**
@@ -365,29 +414,6 @@ protected:
 	AttributeMultiVector<Dart>* getRelation(const std::string& name) ;
 
 	/****************************************
-	 *          THREAD MANAGEMENT           *
-	 ****************************************/
-public:
-//	/**
-//	 * add threads (a table of Marker per orbit for each thread)
-//	 * to allow MT
-//	 * @param nb thread to add
-//	 */
-//	void addThreadMarker(unsigned int nb) ;
-
-//	/**
-//	 * return allowed threads
-//	 * @return the number of threads (including principal)
-//	 */
-//	unsigned int getNbThreadMarkers() const;
-
-//	/**
-//	 * Remove some added threads
-//	 * @return remaining number of threads (including principal)
-//	 */
-//	void removeThreadMarker(unsigned int nb) ;
-
-	/****************************************
 	 *             SAVE & LOAD              *
 	 ****************************************/
 protected:
@@ -431,21 +457,37 @@ public:
 	/**
 	 * compact the map
 	 * @warning the quickTraversals needs to be updated
+	 * @param topoOnly compact only the topo ?
 	 */
 	void compact(bool topoOnly = false) ;
 
 
 	/**
+	 * compact a container (and update embedding attribute of topo)
+	 * @param orbit orbit of container to compact
+	 * @param frag minimum fragmentation value for compacting (default value 1.0 mean always compact)s
+	 */
+	void compactOrbitContainer(unsigned int orbit, float frag=1.0);
+
+	/**
+	 * @brief compact if containers are fragmented.
+	 * @warning the quickTraversals needs to be updated
+	 * @param frag if fragmentation (filling) of containers inferior to frag then compact
+	 * @param topoOnly compact only the topo ?
+	 */
+	void compactIfNeeded(float frag, bool topoOnly = false) ;
+
+	/**
 	 * test if containers are fragmented
-	 *  ~1.0 no need to compact
-	 *  ~0.0 need to compact
+	 *  ~1.0 (full filled) no need to compact
+	 *  ~0.0 (lots of holes) need to compact
 	 */
 	inline float fragmentation(unsigned int orbit);
 
 	/**
 	 * @brief dump all attributes of map in CSV format  (; separated columns)
 	 */
-	void dumpCSV() const;
+	virtual void dumpCSV() const;
 
 public:
 	/**
@@ -456,39 +498,33 @@ public:
 } ;
 
 
+// DartBufferThread class that hide the usage of askDartBuffer & releaseDartBuffer
+// scope of DartBuffer declaration use for auto release;
+// typical usage:
+//    DartBuffer buff(thread)
+//    std::vector<DART>& vd=buff.vector();
+//    vd.push_back(..)
+//    ....
 
-//
-//template <typename MAP>
-//bool foreach_dart_of_orbit_in_parent(MAP* ptrMap, unsigned int orbit, Dart d, FunctorType& f, unsigned int thread = 0)
+//class DartsBufferThread
 //{
-//	switch(orbit)
+//protected:
+//	std::vector<Dart>* m_vd;
+//public:
+//	inline DartsBufferThread()
 //	{
-//		case  DART: return f(d);
-//		case  VERTEX: return ptrMap->MAP::ParentMap::foreach_dart_of_vertex(d, f, thread) ;
-//		case  EDGE: return ptrMap->MAP::ParentMap::foreach_dart_of_edge(d, f, thread) ;
-//		case  ORIENTED_FACE: return ptrMap->MAP::ParentMap::foreach_dart_of_oriented_face(d, f, thread) ;
-//		case  FACE: return ptrMap->MAP::ParentMap::foreach_dart_of_face(d, f, thread) ;
-//		case  VOLUME: return ptrMap->MAP::ParentMap::foreach_dart_of_volume(d, f, thread) ;
-//		default: assert(!"Cells of this dimension are not handled") ;
+//		m_vd = GenericMap::askDartBuffer();
 //	}
-//	return false ;
-//}
-//
-//template <typename MAP>
-//bool foreach_dart_of_orbit_in_parent2(MAP* ptrMap, unsigned int orbit, Dart d, FunctorType& f, unsigned int thread = 0)
-//{
-//	switch(orbit)
+
+//	inline ~DartsBufferThread()
 //	{
-//		case  DART: return f(d);
-//		case  VERTEX: return ptrMap->MAP::ParentMap::ParentMap::foreach_dart_of_vertex(d, f,thread) ;
-//		case  EDGE: return ptrMap->MAP::ParentMap::ParentMap::foreach_dart_of_edge(d, f, thread) ;
-//		case  ORIENTED_FACE: return ptrMap->MAP::ParentMap::ParentMap::foreach_dart_of_oriented_face(d, f, thread) ;
-//		case  FACE: return ptrMap->MAP::ParentMap::ParentMap::foreach_dart_of_face(d, f, thread) ;
-//		case  VOLUME: return ptrMap->MAP::ParentMap::ParentMap::foreach_dart_of_volume(d, f, thread) ;
-//		default: assert(!"Cells of this dimension are not handled") ;
+//		GenericMap::releaseDartBuffer(m_vd);
 //	}
-//	return false ;
-//}
+
+//	inline std::vector<Dart>& vector() { return *m_vd;}
+//};
+
+
 
 } //namespace CGoGN
 

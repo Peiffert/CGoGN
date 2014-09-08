@@ -50,12 +50,16 @@ std::vector< std::vector<Dart>* >* GenericMap::s_vdartsBuffers = NULL;
 
 std::vector< std::vector<unsigned int>* >* GenericMap::s_vintsBuffers = NULL;
 
+//std::mutex* GenericMap::s_DartBufferMutex = NULL;
+//std::mutex* GenericMap::s_IntBufferMutex = NULL;
+
 std::vector<GenericMap*>*  GenericMap::s_instances=NULL;
 
 
 
 GenericMap::GenericMap():
-	m_nextMarkerId(0)
+	m_nextMarkerId(0),
+	m_manipulator(NULL)
 {
 	if(m_attributes_registry_map == NULL)
 	{
@@ -103,10 +107,15 @@ GenericMap::GenericMap():
 
 	s_instances->push_back(this);
 
+	m_thread_ids.reserve(NB_THREAD+1);
+	m_thread_ids.push_back( std::this_thread::get_id() );
+
+
 	if (s_vdartsBuffers == NULL)
 	{
 		s_vdartsBuffers = new std::vector< std::vector<Dart>* >[NB_THREAD];
 		s_vintsBuffers = new std::vector< std::vector<unsigned int>* >[NB_THREAD];
+
 		for(unsigned int i = 0; i < NB_THREAD; ++i)
 		{
 			s_vdartsBuffers[i].reserve(8);
@@ -166,6 +175,36 @@ GenericMap::~GenericMap()
 	s_instances->pop_back();
 }
 
+bool GenericMap::askManipulate(MapManipulator* ptr)
+{
+	if (m_manipulator == NULL)
+	{
+		CGoGNerr << "Map already manipulated by other manipulator" << CGoGNendl;
+		return false;
+	}
+
+	m_manipulator = ptr;
+	return true;
+}
+
+MapManipulator* GenericMap::getManipulator()
+{
+	return m_manipulator;
+}
+
+bool GenericMap::releaseManipulate(MapManipulator* ptr)
+{
+	if (m_manipulator != ptr)
+	{
+		CGoGNerr << "Wrong manipulator want to release the map" << CGoGNendl;
+		return false;
+	}
+
+	m_manipulator = NULL;
+	return true;
+}
+
+
 void GenericMap::init(bool addBoundaryMarkers)
 {
 	for(unsigned int i = 0; i < NB_ORBITS; ++i)
@@ -200,7 +239,14 @@ void GenericMap::init(bool addBoundaryMarkers)
 void GenericMap::clear(bool removeAttrib)
 {
 	if (removeAttrib)
+	{
+#ifndef NDEBUG
+		for(unsigned int i = 0; i < NB_ORBITS; ++i)
+			if (m_attribs[i].hasMarkerAttribute())
+				CGoGNout << "Warning removing marker attribute on orbit, need update ? "<<orbitName(i)<< CGoGNendl;
+#endif
 		init();
+	}
 	else
 	{
 		for(unsigned int i = 0; i < NB_ORBITS; ++i)
@@ -450,11 +496,56 @@ void GenericMap::compact(bool topoOnly)
 	}
 }
 
+void GenericMap::compactOrbitContainer(unsigned int orbit, float frag)
+{
+	std::vector<unsigned int> oldnew;
+
+	if (isOrbitEmbedded(orbit) && (fragmentation(orbit)< frag))
+	{
+		m_attribs[orbit].compact(oldnew);
+		for (unsigned int i = m_attribs[DART].begin(); i != m_attribs[DART].end(); m_attribs[DART].next(i))
+		{
+			unsigned int& idx = m_embeddings[orbit]->operator[](i);
+			unsigned int jdx = oldnew[idx];
+			if (jdx != 0xffffffff)
+				idx = jdx;
+		}
+	}
+}
+
+
+void GenericMap::compactIfNeeded(float frag, bool topoOnly)
+{
+	if (fragmentation(DART)< frag)
+		compactTopo();
+
+	if (topoOnly)
+		return;
+
+	std::vector<unsigned int> oldnew;
+
+	for (unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
+	{
+		if ((orbit != DART) && (isOrbitEmbedded(orbit)) && (fragmentation(orbit)< frag))
+		{
+			m_attribs[orbit].compact(oldnew);
+			for (unsigned int i = m_attribs[DART].begin(); i != m_attribs[DART].end(); m_attribs[DART].next(i))
+			{
+				unsigned int& idx = m_embeddings[orbit]->operator[](i);
+				unsigned int jdx = oldnew[idx];
+				if (jdx != 0xffffffff)
+					idx = jdx;
+			}
+		}
+	}
+}
+
 
 void GenericMap::dumpCSV() const
 {
 	for (unsigned int orbit = 0; orbit < NB_ORBITS; ++orbit)
 	{
+		CGoGNout << "Container of "<<orbitName(orbit)<< CGoGNendl;
 		m_attribs[orbit].dumpCSV();
 	}
 	CGoGNout << CGoGNendl;

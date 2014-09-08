@@ -33,6 +33,15 @@
 #include "Container/fakeAttribute.h"
 #include "Topology/generic/cells.h"
 
+/// Macro that checks if ATTRIBUTEHANDLER type is an AttributeHandler
+#define CHECK_ATTRIBUTEHANDLER(ATTRIBUTEHANDLER)\
+	static_assert(std::is_base_of<AttributeHandlerGen, ATTRIBUTEHANDLER>::value, "Error not AttributeHandler");
+
+/// Macro that checks if ATTRIBUTEHANDLER type is an AttributeHandler of orbit ORBITVALUE
+#define CHECK_ATTRIBUTEHANDLER_ORBIT(ATTRIBUTEHANDLER, ORBITVALUE)\
+	static_assert(std::is_base_of<AttributeHandlerGen, ATTRIBUTEHANDLER>::value, "Error not AttributeHandler");\
+	static_assert(ATTRIBUTEHANDLER::ORBIT == ORBITVALUE, "Error wrong orbit of AttributeHandler");
+
 namespace CGoGN
 {
 
@@ -50,10 +59,7 @@ public:
 		valid(v)
 	{}
 
-	bool isValid() const
-	{
-		return valid ;
-	}
+	bool isValid() const { return valid ; }
 
 	virtual int getSizeOfType() const = 0;
 
@@ -65,11 +71,27 @@ public:
 	virtual AttributeMultiVectorGen* getDataVectorGen() const = 0;
 
 protected:
-	void setInvalid()
-	{
-		valid = false ;
-	}
+	void setInvalid() { valid = false ; }
+	void setValid() { valid = true ; }
 } ;
+
+template <unsigned int ORB>
+class AttributeHandlerOrbit: public AttributeHandlerGen
+{
+public:
+	AttributeHandlerOrbit(bool v) :
+		AttributeHandlerGen(v)
+	{}
+
+	static const unsigned int ORBIT = ORB;
+};
+
+
+// forward declaration
+template <typename T, unsigned int ORB, typename MAP>
+class AttributeHandlerIter;
+
+
 
 /**
  * Class that create an access-table to an existing attribute
@@ -78,8 +100,8 @@ protected:
  * - [ dart ]
  * - begin / end / next to manage indexing
  */
-template <typename T, unsigned int ORBIT, typename MAP>
-class AttributeHandler : public AttributeHandlerGen
+template <typename T, unsigned int ORB, typename MAP>
+class AttributeHandler : public AttributeHandlerOrbit<ORB>
 {
 protected:
 	// the map that contains the linked attribute
@@ -110,7 +132,7 @@ public:
 	 * Copy constructor
 	 * @param ta the table attribute
 	 */
-	AttributeHandler(const AttributeHandler<T, ORBIT, MAP>& ta) ;
+	AttributeHandler(const AttributeHandler<T, ORB, MAP>& ta) ;
 
 	/**
 	 * Transmute Constructor
@@ -124,14 +146,14 @@ public:
 	 * affectation operator
 	 * @param ta the table attribute to affect to this
 	 */
-	AttributeHandler<T, ORBIT, MAP>& operator=(const AttributeHandler<T, ORBIT, MAP>& ta) ;
+	AttributeHandler<T, ORB, MAP>& operator=(const AttributeHandler<T, ORB, MAP>& ta) ;
 
 	/**
 	 * transmuted affectation operator
 	 * @param ta the table attribute to affect to this
 	 */
 	template <unsigned int ORBIT2>
-	AttributeHandler<T, ORBIT, MAP>& operator=(const AttributeHandler<T, ORBIT2, MAP>& ta) ;
+	AttributeHandler<T, ORB, MAP>& operator=(const AttributeHandler<T, ORBIT2, MAP>& ta) ;
 
 	/**
 	 * Destructor (empty & virtual)
@@ -190,12 +212,12 @@ public:
 	/**
 	 * [] operator with cell parameter
 	 */
-	T& operator[](Cell<ORBIT> c) ;
+	T& operator[](Cell<ORB> c) ;
 
 	/**
 	 * const [] operator with cell parameter
 	 */
-	const T& operator[](Cell<ORBIT> c) const ;
+	const T& operator[](Cell<ORB> c) const ;
 
 	/**
 	 * at operator (same as [] but with index parameter)
@@ -239,77 +261,112 @@ public:
 	 * @param iter iterator to
 	 */
 	void next(unsigned int& iter) const;
+
+	AttributeHandlerIter<T,ORB,MAP> iterable() const;
 } ;
 
-/**
- *  shortcut class for Dart Attribute (Handler)
- */
-template <typename T, typename MAP>
-class DartAttribute : public AttributeHandler<T, DART, MAP>
-{
-public:
-	DartAttribute() : AttributeHandler<T, DART, MAP>() {}
-	DartAttribute(const AttributeHandler<T, DART, MAP>& ah) : AttributeHandler<T, DART, MAP>(ah) {}
-	DartAttribute(MAP* m, AttributeMultiVector<T>* amv) : AttributeHandler<T, DART, MAP>(m,amv) {}
-	DartAttribute<T, MAP>& operator=(const AttributeHandler<T, DART, MAP>& ah) { this->AttributeHandler<T, DART, MAP>::operator=(ah); return *this; }
-};
+
 
 /**
- *  shortcut class for Vertex Attribute (Handler)
+ *  c++11 shortcut for Dart Attribute (Handler)
  */
 template <typename T, typename MAP>
-class VertexAttribute : public AttributeHandler<T, VERTEX, MAP>
-{
-public:
-	VertexAttribute() : AttributeHandler<T, VERTEX, MAP>() {}
-	VertexAttribute(const AttributeHandler<T, VERTEX, MAP>& ah) : AttributeHandler<T, VERTEX, MAP>(ah) {}
-	VertexAttribute(MAP* m, AttributeMultiVector<T>* amv) : AttributeHandler<T, VERTEX, MAP>(m,amv) {}
-	VertexAttribute<T, MAP>& operator=(const AttributeHandler<T, VERTEX, MAP>& ah) { this->AttributeHandler<T, VERTEX, MAP>::operator=(ah); return *this; }
-	VertexAttribute<T, MAP>& operator=(const AttributeHandler<T, EDGE, MAP>& ah) { this->AttributeHandler<T,VERTEX, MAP>::operator=(ah); return *this; }
-	VertexAttribute<T, MAP>& operator=(const AttributeHandler<T, FACE, MAP>& ah) { this->AttributeHandler<T,VERTEX, MAP>::operator=(ah); return *this; }
-	VertexAttribute<T, MAP>& operator=(const AttributeHandler<T, VOLUME, MAP>& ah) { this->AttributeHandler<T,VERTEX, MAP>::operator=(ah); return *this; }
-};
+using DartAttribute = AttributeHandler<T, DART, MAP>;
+
+typedef AttributeHandlerOrbit<DART> DartAttributeGen;
+
 
 /**
- *  shortcut class for Edge Attribute (Handler)
+ *  c++11 shortcut for Vertex Attribute (Handler)
  */
 template <typename T, typename MAP>
-class EdgeAttribute : public AttributeHandler<T, EDGE, MAP>
-{
-public:
-	EdgeAttribute() : AttributeHandler<T, EDGE, MAP>() {}
-	EdgeAttribute(const AttributeHandler<T, EDGE, MAP>& ah) : AttributeHandler<T, EDGE, MAP>(ah) {}
-	EdgeAttribute(MAP* m, AttributeMultiVector<T>* amv) : AttributeHandler<T, EDGE, MAP>(m,amv) {}
-	EdgeAttribute<T, MAP>& operator=(const AttributeHandler<T, EDGE, MAP>& ah) { this->AttributeHandler<T, EDGE, MAP>::operator=(ah); return *this; }
-};
+using VertexAttribute = AttributeHandler<T, VERTEX, MAP>;
+
+typedef AttributeHandlerOrbit<VERTEX> VertexAttributeGen;
+
 
 /**
- *  shortcut class for Face Attribute (Handler)
+ *  c++11 shortcut for Edge Attribute (Handler)
  */
 template <typename T, typename MAP>
-class FaceAttribute : public AttributeHandler<T, FACE, MAP>
-{
-public:
-	FaceAttribute() : AttributeHandler<T, FACE, MAP>() {}
-	FaceAttribute(const AttributeHandler<T, FACE, MAP>& ah) : AttributeHandler<T, FACE, MAP>(ah) {}
-	FaceAttribute(MAP* m, AttributeMultiVector<T>* amv) : AttributeHandler<T, FACE, MAP>(m,amv) {}
-	FaceAttribute<T, MAP>& operator=(const AttributeHandler<T, FACE, MAP>& ah) { this->AttributeHandler<T, FACE, MAP>::operator=(ah); return *this; }
-	FaceAttribute<T, MAP>& operator=(const AttributeHandler<T, VERTEX, MAP>& ah) { this->AttributeHandler<T,FACE, MAP>::operator=(ah); return *this; }
-};
+using EdgeAttribute = AttributeHandler<T, EDGE, MAP>;
+
+typedef AttributeHandlerOrbit<EDGE> EdgeAttributeGen;
 
 /**
- *  shortcut class for Volume Attribute (Handler)
+ *  c++11 shortcut for Face Attribute (Handler)
  */
 template <typename T, typename MAP>
-class VolumeAttribute : public AttributeHandler<T, VOLUME, MAP>
+using FaceAttribute = AttributeHandler<T, FACE, MAP>;
+
+typedef AttributeHandlerOrbit<FACE> FaceAttributeGen;
+
+/**
+ *  c++11 shortcut for Volume Attribute (Handler)
+ */
+template <typename T, typename MAP>
+using VolumeAttribute = AttributeHandler<T, VOLUME, MAP>;
+
+typedef AttributeHandlerOrbit<VOLUME> VolumeAttributeGen;
+
+
+
+
+template <typename T, unsigned int ORB, typename MAP>
+class AttributeHandlerIter : public AttributeHandler<T,ORB,MAP>
 {
 public:
-	VolumeAttribute() : AttributeHandler<T, VOLUME, MAP>() {}
-	VolumeAttribute(const AttributeHandler<T, VOLUME, MAP>& ah) : AttributeHandler<T, VOLUME, MAP>(ah) {}
-	VolumeAttribute(MAP* m, AttributeMultiVector<T>* amv) : AttributeHandler<T, VOLUME, MAP>(m,amv) {}
-	VolumeAttribute<T, MAP>& operator=(const AttributeHandler<T, VOLUME, MAP>& ah) { this->AttributeHandler<T, VOLUME, MAP>::operator=(ah); return *this; }
-	VolumeAttribute<T, MAP>& operator=(const AttributeHandler<T, VERTEX, MAP>& ah) { this->AttributeHandler<T, VOLUME, MAP>::operator=(ah); return *this; }
+
+	AttributeHandlerIter(const AttributeHandler<T, ORB, MAP>& ta):
+		AttributeHandler<T,ORB,MAP>(ta)
+	{
+	}
+
+
+	class iterator
+	{
+		AttributeHandlerIter<T,ORB,MAP>* m_ptr;
+		unsigned int m_index;
+
+	public:
+
+		inline iterator(AttributeHandlerIter<T, ORB, MAP>* p, unsigned int i): m_ptr(p),m_index(i){}
+
+		inline iterator& operator++()
+		{
+			m_ptr->next(m_index);
+			return *this;
+		}
+
+		inline T& operator*()
+		{
+			T& v = m_ptr->operator[](m_index);
+			return v;
+		}
+
+		inline bool operator!=(iterator it)
+		{
+			return m_index != it.m_index;
+		}
+
+	};
+
+	inline iterator begin()
+	{
+		return iterator(this,AttributeHandler<T,ORB,MAP>::begin());
+	}
+
+	inline iterator end()
+	{
+		return iterator(this,AttributeHandler<T,ORB,MAP>::end());
+	}
+
 };
+
+
+
+
+
 
 
 // turn_to<b>(A*</b> obj) changes class of the object
@@ -339,6 +396,12 @@ namespace Parallel
 template <typename ATTR, typename FUNC>
 void foreach_attribute(ATTR& attribute, FUNC func, unsigned int nbth = NumberOfThreads);
 
+}
+
+template<unsigned int ORBIT>
+inline bool checkAttributeHandlerOrbit(const AttributeHandlerGen& att)
+{
+	return dynamic_cast<const AttributeHandlerOrbit<ORBIT>*>(&att) != NULL;
 }
 
 } // namespace CGoGN

@@ -77,7 +77,17 @@ typename ATT::DATA_TYPE smooth(MAP& map, Vertex v, const ATT& attributs)
 template <typename MAP, typename ATT>
 void applySmooth(MAP& map, const ATT& att_in, ATT& att_out)
 {
-	foreach_cell<VERTEX>(map,[&](Vertex v) // for all edge e of map do
+	// check at compile if ATT is an AttributeHandler on orbit VERTEX
+	CHECK_ATTRIBUTEHANDLER_ORBIT(ATT, VERTEX);
+
+	// or check at runtime(take care of const!)
+	if (! checkAttributeHandlerOrbit<VERTEX>(att_in))
+	{
+		CGoGNerr << "function applySmooth work only with VertexAttributes !" << CGoGNendl;
+		return;
+	}
+
+	foreach_cell<VERTEX>(map,[&](Vertex v) // for all vertex v of map do
 	{
 		att_out[v] = smooth(map,v,att_in);
 	});
