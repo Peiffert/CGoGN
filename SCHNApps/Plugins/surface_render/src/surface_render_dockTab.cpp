@@ -1,0 +1,334 @@
+#include "surface_render_dockTab.h"
+
+#include "surface_render.h"
+#include "schnapps.h"
+#include "mapHandler.h"
+
+namespace CGoGN
+{
+
+namespace SCHNApps
+{
+
+Surface_Render_DockTab::Surface_Render_DockTab(SCHNApps* s, Surface_Render_Plugin* p) :
+	m_schnapps(s),
+	m_plugin(p),
+	b_updatingUI(false),
+	m_currentColorDial(0)
+
+{
+	setupUi(this);
+
+	connect(combo_positionVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(positionVBOChanged(int)));
+	connect(combo_normalVBO, SIGNAL(currentIndexChanged(int)), this, SLOT(normalVBOChanged(int)));
+	connect(check_renderVertices, SIGNAL(toggled(bool)), this, SLOT(renderVerticesChanged(bool)));
+	connect(slider_verticesScaleFactor, SIGNAL(valueChanged(int)), this, SLOT(verticesScaleFactorChanged(int)));
+	connect(check_renderEdges, SIGNAL(toggled(bool)), this, SLOT(renderEdgesChanged(bool)));
+	connect(check_renderFaces, SIGNAL(toggled(bool)), this, SLOT(renderFacesChanged(bool)));
+	connect(group_faceShading, SIGNAL(buttonClicked(QAbstractButton*)), this, SLOT(faceStyleChanged(QAbstractButton*)));
+	connect(check_renderBoundary, SIGNAL(toggled(bool)), this, SLOT(renderBoundaryChanged(bool)));
+
+	m_colorDial  = new QColorDialog(m_diffuseColor,NULL);
+	connect(dcolorButton,SIGNAL(clicked()),this,SLOT(diffuseColorClicked()));
+	connect(scolorButton,SIGNAL(clicked()),this,SLOT(simpleColorClicked()));
+	connect(vcolorButton,SIGNAL(clicked()),this,SLOT(vertexColorClicked()));
+	connect(m_colorDial,SIGNAL(colorSelected(const QColor&)),this,SLOT(colorSelected(const QColor&)));
+
+}
+
+
+
+void Surface_Render_DockTab::diffuseColorClicked()
+{
+	m_colorDial->show();
+	m_colorDial->setCurrentColor(m_diffuseColor);
+	m_currentColorDial = 1;
+}
+
+void Surface_Render_DockTab::simpleColorClicked()
+{
+	m_colorDial->show();
+	m_colorDial->setCurrentColor(m_simpleColor);
+	m_currentColorDial = 2;
+}
+
+void Surface_Render_DockTab::vertexColorClicked()
+{
+	m_colorDial->show();
+	m_colorDial->setCurrentColor(m_vertexColor);
+	m_currentColorDial = 3;
+}
+
+
+void Surface_Render_DockTab::colorSelected(const QColor& col)
+{
+	if (m_currentColorDial == 1)
+	{
+
+		m_diffuseColor = col;
+		dcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
+
+		Geom::Vec4f rgbCol(1.0/255.0*m_diffuseColor.red(), 1.0/255.0*m_diffuseColor.green(),1.0/255.0*m_diffuseColor.blue(),0.0f);
+
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].diffuseColor = rgbCol;
+			view->updateGL();
+		}
+	}
+
+	if (m_currentColorDial == 2)
+	{
+
+		m_simpleColor = col;
+		scolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
+
+		Geom::Vec4f rgbCol(1.0/255.0*m_simpleColor.red(), 1.0/255.0*m_simpleColor.green(),1.0/255.0*m_simpleColor.blue(),0.0f);
+
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].simpleColor = rgbCol;
+			view->updateGL();
+		}
+	}
+
+	if (m_currentColorDial == 3)
+	{
+
+		m_vertexColor = col;
+		vcolorButton->setStyleSheet("QPushButton { background-color:" + col.name() + "}");
+
+		Geom::Vec4f rgbCol(1.0/255.0*m_vertexColor.red(), 1.0/255.0*m_vertexColor.green(),1.0/255.0*m_vertexColor.blue(),0.0f);
+
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].vertexColor = rgbCol;
+			view->updateGL();
+		}
+	}
+}
+
+
+
+
+
+void Surface_Render_DockTab::positionVBOChanged(int index)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].positionVBO = map->getVBO(combo_positionVBO->currentText());
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::normalVBOChanged(int index)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].normalVBO = map->getVBO(combo_normalVBO->currentText());
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::renderVerticesChanged(bool b)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].renderVertices = b;
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::verticesScaleFactorChanged(int i)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].verticesScaleFactor = i / 50.0;
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::renderEdgesChanged(bool b)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].renderEdges = b;
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::renderFacesChanged(bool b)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].renderFaces = b;
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::faceStyleChanged(QAbstractButton* b)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			if(radio_flatShading->isChecked())
+				m_plugin->h_viewParameterSet[view][map].faceStyle = MapParameters::FLAT;
+			else if(radio_phongShading->isChecked())
+				m_plugin->h_viewParameterSet[view][map].faceStyle = MapParameters::PHONG;
+			view->updateGL();
+		}
+	}
+}
+
+void Surface_Render_DockTab::renderBoundaryChanged(bool b)
+{
+	if(!b_updatingUI)
+	{
+		View* view = m_schnapps->getSelectedView();
+		MapHandlerGen* map = m_schnapps->getSelectedMap();
+		if(view && map)
+		{
+			m_plugin->h_viewParameterSet[view][map].renderBoundary = b;
+			view->updateGL();
+		}
+	}
+}
+
+
+
+
+
+void Surface_Render_DockTab::addPositionVBO(QString name)
+{
+	b_updatingUI = true;
+	combo_positionVBO->addItem(name);
+	b_updatingUI = false;
+}
+
+void Surface_Render_DockTab::removePositionVBO(QString name)
+{
+	b_updatingUI = true;
+	int curIndex = combo_positionVBO->currentIndex();
+	int index = combo_positionVBO->findText(name, Qt::MatchExactly);
+	if(curIndex == index)
+		combo_positionVBO->setCurrentIndex(0);
+	combo_positionVBO->removeItem(index);
+	b_updatingUI = false;
+}
+
+void Surface_Render_DockTab::addNormalVBO(QString name)
+{
+	b_updatingUI = true;
+	combo_normalVBO->addItem(name);
+	b_updatingUI = false;
+}
+
+void Surface_Render_DockTab::removeNormalVBO(QString name)
+{
+	b_updatingUI = true;
+	int curIndex = combo_normalVBO->currentIndex();
+	int index = combo_normalVBO->findText(name, Qt::MatchExactly);
+	if(curIndex == index)
+		combo_normalVBO->setCurrentIndex(0);
+	combo_normalVBO->removeItem(index);
+	b_updatingUI = false;
+}
+
+void Surface_Render_DockTab::updateMapParameters()
+{
+	b_updatingUI = true;
+
+	combo_positionVBO->clear();
+	combo_positionVBO->addItem("- select VBO -");
+
+	combo_normalVBO->clear();
+	combo_normalVBO->addItem("- select VBO -");
+
+	View* view = m_schnapps->getSelectedView();
+	MapHandlerGen* map = m_schnapps->getSelectedMap();
+
+	if(view && map)
+	{
+		const MapParameters& p = m_plugin->h_viewParameterSet[view][map];
+
+		unsigned int i = 1;
+		foreach(Utils::VBO* vbo, map->getVBOSet().values())
+		{
+			if(vbo->dataSize() == 3)
+			{
+				combo_positionVBO->addItem(QString::fromStdString(vbo->name()));
+				if(vbo == p.positionVBO)
+					combo_positionVBO->setCurrentIndex(i);
+
+				combo_normalVBO->addItem(QString::fromStdString(vbo->name()));
+				if(vbo == p.normalVBO)
+					combo_normalVBO->setCurrentIndex(i);
+
+				++i;
+			}
+		}
+
+		check_renderVertices->setChecked(p.renderVertices);
+		slider_verticesScaleFactor->setSliderPosition(p.verticesScaleFactor * 50.0);
+		check_renderEdges->setChecked(p.renderEdges);
+		check_renderFaces->setChecked(p.renderFaces);
+		radio_flatShading->setChecked(p.faceStyle == MapParameters::FLAT);
+		radio_phongShading->setChecked(p.faceStyle == MapParameters::PHONG);
+
+		m_diffuseColor = QColor(255*p.diffuseColor[0],255*p.diffuseColor[1],255*p.diffuseColor[2]);
+		dcolorButton->setStyleSheet("QPushButton { background-color:"+m_diffuseColor.name()+ " }");
+
+		m_simpleColor = QColor(255*p.simpleColor[0],255*p.simpleColor[1],255*p.simpleColor[2]);
+		scolorButton->setStyleSheet("QPushButton { background-color:"+m_simpleColor.name()+ " }");
+
+		m_vertexColor = QColor(255*p.vertexColor[0],255*p.vertexColor[1],255*p.vertexColor[2]);
+		vcolorButton->setStyleSheet("QPushButton { background-color:"+m_vertexColor.name()+ " }");
+
+
+	}
+
+	b_updatingUI = false;
+}
+
+} // namespace SCHNApps
+
+} // namespace CGoGN
