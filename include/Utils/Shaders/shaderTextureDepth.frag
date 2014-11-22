@@ -8,5 +8,7 @@ FRAG_OUT_DEF;
 void main()
 {
     gl_FragDepth = texture2D(textureDepthUnit,texCoord).r;
-	gl_FragColor = texture2D(textureUnit,texCoord);
+    gl_FragColor = texture2D(textureUnit,texCoord);
+    //gl_FragData[0] = texture2D(textureUnit,texCoord);
+    //gl_FragData[1] = texture2D(textureDepthUnit,texCoord).r;
 }

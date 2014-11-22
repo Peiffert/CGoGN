@@ -73,6 +73,11 @@
           </item>
           <item>
            <property name="text">
+            <string>DEPTH</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
             <string>SSAO</string>
            </property>
           </item>

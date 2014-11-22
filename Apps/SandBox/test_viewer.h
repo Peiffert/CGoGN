@@ -43,6 +43,8 @@
 
 #include "Utils/Shaders/shaderPhong.h"
 #include "Utils/Shaders/shaderSimpleFlat.h"
+#include "Utils/Shaders/shaderSimpleDepth.h"
+#include "Utils/Shaders/shaderSimpleNormal.h"
 #include "Utils/Shaders/shaderSSAO.h"
 #include "Utils/Shaders/shaderSimpleColor.h"
 #include "Utils/Shaders/shaderVectorPerVertex.h"
@@ -79,7 +81,7 @@ public:
 
     Utils::QT::uiDockInterface dock ;
 
-    enum renderMode { FLAT, PHONG, SSAO } ;
+    enum renderMode { FLAT, PHONG, DEPTH, SSAO } ;
 
 	Geom::Vec4f colDif ;
 	Geom::Vec4f colSpec ;
@@ -112,12 +114,23 @@ public:
 	Utils::VBO* m_positionVBO ;
 	Utils::VBO* m_normalVBO;
 
-    int m_FBOColor, m_FBODepth;
+    int m_FBOColor;
+    bool m_FBODepth;
     Utils::FBO* m_FBO;
 
-    Utils::Texture<2,Geom::Vec3uc>* m_textureWP;
-	Utils::ShaderPhong* m_phongShader ;
+    int m_FBOColorZDepth;
+    bool m_FBODepthZDepth;
+    Utils::FBO* m_FBOZDepth;
+
+    int m_FBOColorNormal;
+    bool m_FBODepthNormal;
+    Utils::FBO* m_FBONormal;
+
+
+    Utils::ShaderPhong* m_phongShader ;
 	Utils::ShaderSimpleFlat* m_flatShader ;
+    Utils::ShaderSimpleDepth* m_depthShader;
+    Utils::ShaderSimpleNormal* m_normalShader;
     //Utils::ShaderSSAO* m_SSAOShader ;
 	Utils::ShaderVectorPerVertex* m_vectorShader ;
 	Utils::ShaderSimpleColor* m_simpleColorShader ;

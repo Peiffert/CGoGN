@@ -8,6 +8,6 @@ INVARIANT_POS;
 void main ()
 {
 	gl_Position = ModelViewProjectionMatrix * vec4 (VertexPosition, 1.0);
-	texCoord = VertexTexCoord;
+        texCoord = VertexTexCoord;
 }
 

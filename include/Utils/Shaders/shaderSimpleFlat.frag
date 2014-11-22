@@ -11,7 +11,8 @@ uniform vec4 materialSpecular;
 uniform vec4 materialAmbient;
 uniform float shininess;
 FRAG_OUT_DEF;
-layout(location = 0) out vec3 gl_FragColor;
+//layout(location = 0) out vec3 gl_FragColor;
+
 void main()
 {
 	vec3 DX = dFdx(Position);

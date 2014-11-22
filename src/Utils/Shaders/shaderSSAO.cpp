@@ -21,7 +21,7 @@
 * Contact information: cgogn@unistra.fr                                        *
 *                                                                              *
 *******************************************************************************/
-/*
+
 #include <GL/glew.h>
 #include "Utils/Shaders/shaderSSAO.h"
 
@@ -153,4 +153,4 @@ void ShaderSSAO::resizeSsaoNoise() {
 } // namespace Utils
 
 } // namespace CGoGN
-*/
+

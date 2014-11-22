@@ -68,17 +68,6 @@ public:
 	 * \param  internalFormat  Internal format of the render buffer : GL_DEPTH_COMPONENT, GL_STENCIL_INDEX, or GL_DEPTH_STENCIL
 	 */
 //	void attachRenderbuffer(GLenum internalFormat);
-    /**
-    * Create screen space for the FBO.\n
-    * Call this function in the init part of your program
-    */
-    void initScreenSpace();
-
-    /**
-    * Draw screen space for the FBO.\n
-    * Call this function at the end of your draw part
-    */
-    void drawOnScreenSpace();
 
 	/**
 	 * Attach a color texture to the Fbo.\n

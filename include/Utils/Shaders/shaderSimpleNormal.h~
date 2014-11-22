@@ -22,12 +22,14 @@
 *                                                                              *
 *******************************************************************************/
 
-#ifndef __CGOGN_SHADER_SSAO__
-#define __CGOGN_SHADER_SSAO__
+#ifndef __CGOGN_SHADER_SFLAT__
+#define __CGOGN_SHADER_SFLAT__
 
 #include "Utils/GLSLShader.h"
-#include "Utils/textures.h"
-#include "Utils/fbo.h"
+#include "Utils/clippingShader.h"
+#include "Geometry/vector_gen.h"
+
+#include <string>
 
 namespace CGoGN
 {
@@ -35,49 +37,65 @@ namespace CGoGN
 namespace Utils
 {
 
-class ShaderSSAO : public GLSLShader
+class ShaderSimpleFlat : public ClippingShader
 {
 protected:
-    // shader sources
-    //static std::string vertexShaderText;
+	// flag color per vertex or not
+	bool m_with_color;
+	// flag color per vertex or not
+	bool m_with_eyepos;	
+
+	// shader sources OGL3
+    static std::string vertexShaderText;
     static std::string fragmentShaderText;
 
     // uniform locations
-    CGoGNGLuint m_unif_ssaoRadius;
-    CGoGNGLuint m_unif_ssaoPower;
-    CGoGNGLuint m_unif_ssaoKernelSize;
-    CGoGNGLuint m_unif_kernel;
-    CGoGNGLuint m_unif_noiseTex;
+	CGoGNGLuint m_unif_ambiant;
+	CGoGNGLuint m_unif_diffuse;
+	CGoGNGLuint m_unif_lightPos;
 
+	//values
+	Geom::Vec4f m_ambiant;
+	Geom::Vec4f m_diffuse;
+	Geom::Vec3f m_lightPos;
 
-    // uniform
-    float m_ssaoRadius;
-    float m_ssaoPower;
-    CGoGNGLuint m_ssaoKernelSize;
-    Geom::Vec3f *m_kernel;
-    Geom::Vec3f *m_noiseData;
+	VBO* m_vboPos;
+	VBO* m_vboColor;
 
-    // bruit
-    CGoGNGLuint m_ssaoNoiseSize;
+	void getLocations();
 
-    //FBO *m_fboSsaoBlur; // fbo to write to in blur step, bind texGBufferGeometric_
+	void sendParams();
 
-    GLuint m_texSsaoNoise;
-
-    void getLocations();
+	void restoreUniformsAttribs();
 
 public:
-    ShaderSSAO();
+	ShaderSimpleFlat(bool doubleSided = false);
 
-    void setParams();
+	// inviduals parameter setting functions
+	void setAmbiant(const Geom::Vec4f& ambiant);
 
-    void setParams(const float m_ssaoRadius, const float m_ssaoPower, const CGoGNGLuint m_ssaoKernelSize);
+	void setDiffuse(const Geom::Vec4f& diffuse);
 
-    void generateSsaoTexNoise();
 
-    void resizeSsaoKernel();
+	void setLightPosition(const Geom::Vec3f& lp);
+	
+	const Geom::Vec4f& getAmbiant() const { return m_ambiant; }
 
-    void resizeSsaoNoise();
+	const Geom::Vec4f& getDiffuse() const { return m_diffuse; }
+
+	const Geom::Vec3f& getLightPosition() const { return m_lightPos; }
+
+	/**
+	 * set all parameter in on call (one bind also)
+	 */
+	void setParams(const Geom::Vec4f& ambiant, const Geom::Vec4f& diffuse, const Geom::Vec3f& lightPos);
+
+	// attributes
+	unsigned int setAttributePosition(VBO* vbo);
+
+	// optional attributes
+	unsigned int setAttributeColor(VBO* vbo);
+	void unsetAttributeColor();
 };
 
 } // namespace Utils
@@ -85,4 +103,3 @@ public:
 } // namespace CGoGN
 
 #endif
-

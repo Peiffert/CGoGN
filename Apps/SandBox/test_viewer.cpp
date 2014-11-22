@@ -36,6 +36,8 @@ Viewer::Viewer() :
 	m_render(NULL),
 	m_phongShader(NULL),
 	m_flatShader(NULL),
+    m_depthShader(NULL),
+    m_normalShader(NULL),
     //m_SSAOShader(NULL),
 	m_vectorShader(NULL),
 	m_simpleColorShader(NULL),
@@ -99,50 +101,28 @@ void Viewer::cb_initGL()
     m_FBOTex->setWrapping(GL_CLAMP_TO_EDGE);
     m_FBOTex->update();*/
 
-    m_FBO = new Utils::FBO(256,256) ;
-    //m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
+    m_FBO = new Utils::FBO(1024,1024) ;
     m_FBOColor = m_FBO->createAttachColorTexture(GL_RGB, GL_LINEAR);
+    //m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
     //m_FBO->initScreenSpace();
 
-    /* TEST TEXTURE */
-    /*m_textureWP = new Utils::Texture<2,Geom::Vec3uc>(GL_UNSIGNED_BYTE);
-    if (!m_textureWP->load("../SCHNApps/resources/cgogn/cgogn2.png"))
-    {
-        std::vector<Geom::Vec3f> colorTable;
-        colorTable.push_back(Geom::Vec3uc(255,0,0));
-        colorTable.push_back(Geom::Vec3uc(0,255,0));
-        colorTable.push_back(Geom::Vec3uc(0,0,255));
-        colorTable.push_back(Geom::Vec3uc(255,255,0));
-        colorTable.push_back(Geom::Vec3uc(255,0,255));
-        colorTable.push_back(Geom::Vec3uc(0,255,255));
-        colorTable.push_back(Geom::Vec3uc(255,255,255));
-        m_textureWP->create(Geom::Vec2ui(16,16));
-        #define WIDTHCHECKER 2
-        for (unsigned int ki = 0; ki < m_textureWP->size()[0]; ++ki)
-        {
-            for (unsigned int kj = 0; kj <  m_textureWP->size()[1]; ++kj)
-            {
-                unsigned int kc = ((kj/WIDTHCHECKER)*m_textureWP->size()[0] + (ki/WIDTHCHECKER))%7;
-                (*m_textureWP)(ki,kj) =colorTable[kc];
-            }
-        }
-        #undef WIDTHCHECKER
-    }
+    m_FBOZDepth = new Utils::FBO(1024,1024) ;
+    m_FBODepthZDepth = m_FBOZDepth->createAttachDepthTexture(GL_LINEAR);
+    //m_FBOColorZDepth = m_FBOZDepth->createAttachColorTexture(GL_RED, GL_LINEAR);
 
-
-    m_textureWP->update();
-    m_textureWP->setWrapping(GL_CLAMP_TO_EDGE);
-
+    m_FBONormal = new Utils::FBO(1024,1024) ;
+    m_FBOColorNormal = m_FBONormal->createAttachColorTexture(GL_RGB32F, GL_LINEAR);
 
     // Phong Shader (lumière par interpolation pixels)
 	m_phongShader = new Utils::ShaderPhong() ;
+    //m_ph+ongShader->defines_Geom('0',);// FAUX Ceci permet dire où faire le rendu (layout)
 	m_phongShader->setAttributePosition(m_positionVBO) ;
 	m_phongShader->setAttributeNormal(m_normalVBO) ;
 	m_phongShader->setAmbiant(colClear) ;
 	m_phongShader->setDiffuse(colDif) ;
 	m_phongShader->setSpecular(colSpec) ;
 	m_phongShader->setShininess(shininess) ;
-*/
+
     // Flat Shader (lumière par face)
 	m_flatShader = new Utils::ShaderSimpleFlat() ;
 	m_flatShader->setAttributePosition(m_positionVBO) ;
@@ -151,12 +131,25 @@ void Viewer::cb_initGL()
 //	m_flatShader->setDiffuseBack(Geom::Vec4f(0,0,0,0)) ;
 //	m_flatShader->setExplode(faceShrinkage) ;
 
+    // shader test de profondeur
+    m_depthShader = new Utils::ShaderSimpleDepth() ;
+    m_depthShader->setAttributePosition(m_positionVBO) ;
+    m_depthShader->setAmbiant(colClear) ;
+    m_depthShader->setDiffuse(colDif) ;
+
+    // shader test de calcul de normal
+    m_normalShader = new Utils::ShaderSimpleNormal() ;
+    m_normalShader->setAttributePosition(m_positionVBO) ;
+    m_normalShader->setAmbiant(colClear) ;
+    m_normalShader->setDiffuse(colDif) ;
+
+
     // SSAO Shader
     /*m_SSAOShader = new Utils::ShaderSSAO() ;
     m_SSAOShader->setAttributePosition(m_positionVBO) ;
     m_SSAOShader->setAmbiant(colClear) ;
     m_SSAOShader->setDiffuse(colDif) ;*/
-/*
+
     // Shader position
 	m_vectorShader = new Utils::ShaderVectorPerVertex() ;
 	m_vectorShader->setAttributePosition(m_positionVBO) ;
@@ -173,28 +166,32 @@ void Viewer::cb_initGL()
 	m_pointSprite = new Utils::PointSprite() ;
 	m_pointSprite->setAttributePosition(m_positionVBO) ;
 	m_pointSprite->setColor(Geom::Vec4f(0.0f, 0.0f, 1.0f, 1.0f)) ;
-*/
+
     // Affichage FBO
     m_shaderWP = new Utils::ShaderWallPaper();
     m_shaderWP->setTextureUnit(m_FBOColor);
     //m_shaderWP->setTexture(m_textureWP);
 
-    //registerShader(m_phongShader) ;
+    std::cout << "COUCOU1"<< std::endl;
+    registerShader(m_phongShader) ;
 	registerShader(m_flatShader) ;
+    registerShader(m_depthShader) ;
+    registerShader(m_normalShader) ;
     //registerShader(m_SSAOShader) ;
-    //registerShader(m_vectorShader) ;
-    //registerShader(m_simpleColorShader) ;
-    //registerShader(m_pointSprite) ;
-    //registerShader(m_shaderWP);
+    registerShader(m_vectorShader) ;
+    registerShader(m_simpleColorShader) ;
+    registerShader(m_pointSprite) ;
+    registerShader(m_shaderWP);
 
-    //glEnable(GL_TEXTURE_2D);
+    glEnable(GL_TEXTURE_2D);
 }
 
 // Dessin 3D
 void Viewer::cb_redraw()
 {
     m_FBO->bind();
-/*    if(m_drawVertices)
+    glClear(GL_COLOR_BUFFER_BIT);
+    if(m_drawVertices)
 	{
 		glDepthFunc(GL_LEQUAL);
 		m_pointSprite->setSize(vertexScaleFactor) ;
@@ -207,7 +204,7 @@ void Viewer::cb_redraw()
 		glLineWidth(1.0f) ;
 		m_render->draw(m_simpleColorShader, Algo::Render::GL2::LINES) ;
 	}
-*/
+
 	if(m_drawFaces)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) ;
@@ -223,13 +220,17 @@ void Viewer::cb_redraw()
 			case PHONG :
 				m_render->draw(m_phongShader, Algo::Render::GL2::TRIANGLES) ;
 				break ;
+            case DEPTH : // NON FONCTIONNEL
+            std::cout << "ZAZA"<< std::endl;
+                 m_render->draw(m_depthShader, Algo::Render::GL2::TRIANGLES) ;
+            break ;
             //case SSAO :
                 //m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
             //break ;
 		}
 		glDisable(GL_POLYGON_OFFSET_FILL) ;
 	}
-/*
+
 	if(m_drawTopo)
 	{
 		glDepthFunc(GL_LEQUAL);
@@ -243,18 +244,28 @@ void Viewer::cb_redraw()
 		glLineWidth(1.0f) ;
 		m_render->draw(m_vectorShader, Algo::Render::GL2::POINTS) ;
     }
-*/
-
-    if(glIsTexture (*m_FBO->getColorTexId(m_FBOColor)))
-        std::cout << "RHEY : "<< std::endl;
     m_FBO->unbind();
-    std::cout << "COUCOU"<< std::endl;
-    glDisable(GL_DEPTH_TEST);
-    m_shaderWP->draw(m_FBO->getColorTexId(m_FBOColor));
-    glEnable(GL_DEPTH_TEST);
+
+    // Dessin de profondeur
+    m_FBOZDepth->bind();
+    m_render->draw(m_depthShader, Algo::Render::GL2::TRIANGLES) ;
+    m_FBOZDepth->unbind();
+
+    // Dessin de normals
+    m_FBONormal->bind();
+    m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
+    m_FBONormal->unbind();
+
+    //glDisable(GL_DEPTH_TEST);
+    m_shaderWP->draw(m_FBO->getColorTexId(m_FBOColor)); //MARCHE !
+    //glEnable(GL_DEPTH_TEST);
     //m_shaderWP->draw(0);
-    //m_FBO->draw(0);
-    //m_FBO->drawWithDepth(0);
+    //m_FBO->draw(m_FBOColor); //MARCHE !
+
+    std::cout << "BIAIAIAE"<< std::endl;
+
+    //m_FBO->drawWithDepth(m_FBOColor); //MARCHE !
+    //m_FBO->drawWithDepth(m_FBOColor,m_FBO->getDepthTexId());
 }
 //
 
