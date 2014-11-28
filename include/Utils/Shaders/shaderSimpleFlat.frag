@@ -49,6 +49,6 @@ void main()
 #endif
 	}
 #endif
-        gl_FragColor=finalColor;
-        //gl_FragColor = vec4((N[0]+1.0)/2.0,(N[1]+1.0)/2.0,(N[2]+1.0)/2.0,0.0);
+        //gl_FragColor=finalColor;
+        gl_FragColor = vec4((N[0]+1.0)/2.0,(N[1]+1.0)/2.0,(N[2]+1.0)/2.0,0.0);
 }

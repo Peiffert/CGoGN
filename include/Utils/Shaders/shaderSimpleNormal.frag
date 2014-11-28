@@ -9,5 +9,5 @@ void main()
 	vec3 DX = dFdx(Position);
 	vec3 DY = dFdy(Position);
 	vec3 N=normalize(cross(DX,DY));
-        gl_FragColor=vec4(N,position[2]);
+        gl_FragColor=vec4(N,Position[2]);
 }

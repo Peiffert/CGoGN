@@ -40,21 +40,12 @@ namespace Utils
 class ShaderSSAO : public ClippingShader
 {
 protected:
-    // flag color per vertex or not
-    bool m_with_color;
-    // flag color per vertex or not
-    bool m_with_eyepos;
-
     // shader sources OGL3
     static std::string vertexShaderText;
     static std::string fragmentShaderText;
 
     // uniform locations
-    CGoGNGLuint m_unif_ambiant;
-    CGoGNGLuint m_unif_diffuse;
-    CGoGNGLuint m_unif_lightPos;
     CGoGNGLuint m_unif_FBOTextureNormal;
-    CGoGNGLuint m_unif_FBOTextureZDepth;
     /* Size of the half-sphere */
     CGoGNGLuint m_unif_ssaoRadius;
     /* Strengh of occlusion */
@@ -64,9 +55,6 @@ protected:
     CGoGNGLuint m_unif_noiseTex;
 
     //values
-    Geom::Vec4f m_ambiant;
-    Geom::Vec4f m_diffuse;
-    Geom::Vec3f m_lightPos;
     float m_ssaoRadius;
     float m_ssaoPower;
     int m_ssaoKernelSize;
@@ -90,37 +78,12 @@ protected:
 public:
     ShaderSSAO(bool doubleSided = false);
 
-    // inviduals parameter setting functions
-    void setAmbiant(const Geom::Vec4f& ambiant);
-
-    void setDiffuse(const Geom::Vec4f& diffuse);
-
-    void setLightPosition(const Geom::Vec3f& lp);
-
-    void setFBOTextureZDepth(CGoGNGLuint texture_id);
-
     void setFBOTextureNormal(CGoGNGLuint texture_id);
 
-    const Geom::Vec4f& getAmbiant() const { return m_ambiant; }
-
-    const Geom::Vec4f& getDiffuse() const { return m_diffuse; }
-
-    const Geom::Vec3f& getLightPosition() const { return m_lightPos; }
-
-    /**
+     /**
      * set all parameter in on call (one bind also)
      */
-    void setParams(const Geom::Vec4f& ambiant, const Geom::Vec4f& diffuse, const Geom::Vec3f& lightPos);
-
     void setParams(const float m_ssaoRadius, const float m_ssaoPower, const int m_ssaoKernelSize, const int ssaoNoiseSize);
-
-    // attributes
-    unsigned int setAttributePosition(VBO* vbo);
-
-    // optional attributes
-    unsigned int setAttributeColor(VBO* vbo);
-    void unsetAttributeColor();
-
 
     void generateSsaoTexNoise();
 

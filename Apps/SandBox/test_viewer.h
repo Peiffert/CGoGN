@@ -43,7 +43,6 @@
 
 #include "Utils/Shaders/shaderPhong.h"
 #include "Utils/Shaders/shaderSimpleFlat.h"
-#include "Utils/Shaders/shaderSimpleDepth.h"
 #include "Utils/Shaders/shaderSimpleNormal.h"
 #include "Utils/Shaders/shaderSSAO.h"
 #include "Utils/Shaders/shaderSimpleColor.h"
@@ -118,10 +117,6 @@ public:
     bool m_FBODepth;
     Utils::FBO* m_FBO;
 
-    int m_FBOColorZDepth;
-    bool m_FBODepthZDepth;
-    Utils::FBO* m_FBOZDepth;
-
     int m_FBOColorNormal;
     bool m_FBODepthNormal;
     Utils::FBO* m_FBONormal;
@@ -131,15 +126,11 @@ public:
     Utils::FBO* m_FBOSSAO;
 
     /* Texture reference in SSAO*/
-    int m_FBOSSAOZDepth;
-    int m_FBOSSAONormal;
-
-    /* Uniform texture */
-    GLuint m_u_FBOTexture;
+    //int m_FBOSSAOZDepth;
+    //int m_FBOSSAONormal;
 
     Utils::ShaderPhong* m_phongShader ;
 	Utils::ShaderSimpleFlat* m_flatShader ;
-    Utils::ShaderSimpleDepth* m_depthShader;
     Utils::ShaderSimpleNormal* m_normalShader;
     Utils::ShaderSSAO* m_SSAOShader ;
 	Utils::ShaderVectorPerVertex* m_vectorShader ;

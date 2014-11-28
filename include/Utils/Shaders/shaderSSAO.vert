@@ -1,4 +1,17 @@
-//ShaderSSAO::vertexShaderText
+// ShaderSSAO::vertexShaderText
+
+ATTRIBUTE vec3 VertexPosition;
+ATTRIBUTE vec2 VertexTexCoord;
+uniform mat4 ModelViewProjectionMatrix;
+VARYING_VERT vec2 texCoord;
+INVARIANT_POS;
+void main ()
+{
+        gl_Position = ModelViewProjectionMatrix * vec4 (VertexPosition, 1.0);
+        texCoord = VertexTexCoord;
+}
+
+/*ShaderSSAO::vertexShaderText
 
 ATTRIBUTE vec3 VertexPosition, VertexNormal;
 #ifdef WITH_COLOR
@@ -28,3 +41,4 @@ void main ()
         gl_Position = ModelViewProjectionMatrix * vec4 (VertexPosition, 1.0);
         TexCoord = (vec2 (VertexPosition.x, VertexPosition.y) + 1.0) / 2.0;
 }
+*/
