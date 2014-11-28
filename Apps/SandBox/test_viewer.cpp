@@ -103,15 +103,15 @@ void Viewer::cb_initGL()
 
     m_FBO = new Utils::FBO(1024,1024) ;
     m_FBOColor = m_FBO->createAttachColorTexture(GL_RGB, GL_LINEAR);
-    //m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
+    m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
     //m_FBO->initScreenSpace();
 
-    m_FBOZDepth = new Utils::FBO(1024,1024) ;
-    m_FBODepthZDepth = m_FBOZDepth->createAttachDepthTexture(GL_LINEAR);
+    /*m_FBOZDepth = new Utils::FBO(1024,1024) ;
+    m_FBODepthZDepth = m_FBOZDepth->createAttachDepthTexture(GL_LINEAR);*/
     //m_FBOColorZDepth = m_FBOZDepth->createAttachColorTexture(GL_RED, GL_LINEAR);
 
     m_FBONormal = new Utils::FBO(1024,1024) ;
-    m_FBOColorNormal = m_FBONormal->createAttachColorTexture(GL_RGB32F, GL_LINEAR);
+    m_FBOColorNormal = m_FBONormal->createAttachColorTexture(GL_RGBA32F, GL_LINEAR);
 
     m_FBOSSAO = new Utils::FBO(1024,1024) ;
     m_FBOColorSSAO = m_FBOSSAO->createAttachColorTexture(GL_RGB, GL_LINEAR);
@@ -154,7 +154,7 @@ void Viewer::cb_initGL()
     m_SSAOShader->setAttributePosition(m_positionVBO) ;
     m_SSAOShader->setAmbiant(colClear) ;
     m_SSAOShader->setDiffuse(colDif) ;
-    m_SSAOShader->setFBOTextureZDepth(m_FBO->getColorTexId(m_FBOColorZDepth)) ;
+    //m_SSAOShader->setFBOTextureZDepth(m_FBO->getColorTexId(m_FBOColorZDepth)) ;
     m_SSAOShader->setFBOTextureNormal(m_FBO->getColorTexId(m_FBOColorNormal)) ;
     // TODO : trouver comment lier un uniform au shader
     //m_SSAOShader->bindAttrib();
@@ -201,7 +201,7 @@ void Viewer::cb_initGL()
 void Viewer::cb_redraw()
 {
     m_FBO->bind();
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     if(m_drawVertices)
 	{
 		glDepthFunc(GL_LEQUAL);
@@ -254,9 +254,9 @@ void Viewer::cb_redraw()
     m_FBO->unbind();
 
     // Dessin de profondeur
-    m_FBOZDepth->bind();
+    /*m_FBOZDepth->bind();
     m_render->draw(m_depthShader, Algo::Render::GL2::TRIANGLES) ;
-    m_FBOZDepth->unbind();
+    m_FBOZDepth->unbind();*/
 
     // Dessin de normals
     m_FBONormal->bind();
@@ -265,7 +265,7 @@ void Viewer::cb_redraw()
 
     // Dessin de normals
     m_FBOSSAO->bind();
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     /*m_SSAOShader->bind();
     // TODO : /!\ Pas forcément GL_TEXTURE_2D A vérifier
     glBindTexture(GL_TEXTURE_2D, m_FBO->getColorTexId(m_FBOColorZDepth));
