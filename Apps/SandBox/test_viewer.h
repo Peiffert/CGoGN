@@ -126,12 +126,22 @@ public:
     bool m_FBODepthNormal;
     Utils::FBO* m_FBONormal;
 
+    int m_FBOColorSSAO;
+    bool m_FBODepthSSAO;
+    Utils::FBO* m_FBOSSAO;
+
+    /* Texture reference in SSAO*/
+    int m_FBOSSAOZDepth;
+    int m_FBOSSAONormal;
+
+    /* Uniform texture */
+    GLuint m_u_FBOTexture;
 
     Utils::ShaderPhong* m_phongShader ;
 	Utils::ShaderSimpleFlat* m_flatShader ;
     Utils::ShaderSimpleDepth* m_depthShader;
     Utils::ShaderSimpleNormal* m_normalShader;
-    //Utils::ShaderSSAO* m_SSAOShader ;
+    Utils::ShaderSSAO* m_SSAOShader ;
 	Utils::ShaderVectorPerVertex* m_vectorShader ;
 	Utils::ShaderSimpleColor* m_simpleColorShader ;
 	Utils::PointSprite* m_pointSprite ;
