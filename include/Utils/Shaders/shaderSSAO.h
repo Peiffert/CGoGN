@@ -28,6 +28,10 @@
 #include "Utils/GLSLShader.h"
 #include "Utils/clippingShader.h"
 #include "Geometry/vector_gen.h"
+#include "Utils/Shaders/shaderTextureDepth.h"
+#include "Utils/Shaders/shaderTextureDepth.h"
+#include "Utils/gl_def.h"
+#include "Utils/vbo_base.h"
 
 #include <string>
 
@@ -64,14 +68,19 @@ protected:
     int m_ssaoKernelSize;
     Geom::Vec3f *m_kernel;
     Geom::Vec3f *m_noiseData;
-
+    CGoGNGLuint texNormalId;
     GLuint m_texSsaoNoise;
+
+    bool sm_isInitialized;
 
     // Noise
     int m_ssaoNoiseSize;
 
-    /*VBO* m_vboPos;
-    VBO* m_vboColor;*/
+    /// Vbo of the vertices positions of the fullscreen quad.
+    Utils::VBO* sm_quadPositionsVbo;
+
+    /// Vbo of the vertices texture coords of the fullscreen quad.
+    Utils::VBO* sm_quadTexCoordsVbo;
 
     void getLocations();
 
@@ -94,6 +103,8 @@ public:
     void resizeSsaoKernel();
 
     void resizeSsaoNoise();
+
+    void drawSSAO();
 };
 
 } // namespace Utils

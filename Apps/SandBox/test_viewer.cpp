@@ -102,6 +102,7 @@ void Viewer::cb_initGL()
 
     m_FBOSSAO = new Utils::FBO(1024,1024) ;
     m_FBOColorSSAO = m_FBOSSAO->createAttachColorTexture(GL_RGB, GL_LINEAR);
+    m_FBODepthSSAO = m_FBOSSAO->createAttachDepthTexture(GL_LINEAR);
 
     // Phong Shader (lumière par interpolation pixels)
 	m_phongShader = new Utils::ShaderPhong() ;
@@ -126,8 +127,8 @@ void Viewer::cb_initGL()
 
     // SSAO Shader
     m_SSAOShader = new Utils::ShaderSSAO() ;
-    m_SSAOShader->setParams(1.5f, 2.0f, 30, 3);
-    // ??m_SSAOShader->setFBOTextureNormal(m_FBOSSAO->getColorTexId(m_FBOColorSSAO)) ;
+    m_SSAOShader->setParams(1.5f, 2.0f, 10, 3);
+    m_SSAOShader->setFBOTextureNormal(m_FBONormal->getColorTexId(m_FBOColorNormal)) ;
 
     // Affichage FBO
     m_shaderWP = new Utils::ShaderWallPaper();
@@ -174,33 +175,19 @@ void Viewer::cb_redraw()
 
     m_FBO->unbind();
 
-    // Dessin de profondeur
-    /*m_FBOZDepth->bind();
-    m_render->draw(m_depthShader, Algo::Render::GL2::TRIANGLES) ;
-    m_FBOZDepth->unbind();*/
-
     // Dessin de normals
     m_FBONormal->bind();
     m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
     m_FBONormal->unbind();
 
-    // Dessin de normals
+    // Dessin de SSAO
     m_FBOSSAO->bind();
-    /*glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    //m_SSAOShader->bind();
-    // TODO : /!\ Pas forcément GL_TEXTURE_2D A vérifier
-    glBindTexture(GL_TEXTURE_2D, m_FBO->getColorTexId(m_FBOColorZDepth));
-    glUniform1i(m_u_FBOTexture, 0);
-    glBindTexture(GL_TEXTURE_2D, m_FBO->getColorTexId(m_FBOColorNormal));
-    glUniform1i(m_u_FBOTexture, 1);
-    m_SSAOShader->unbind();
-    */
-    m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    //m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
+    m_SSAOShader->drawSSAO();
     m_FBOSSAO->unbind();
 
-    //glDisable(GL_DEPTH_TEST);
     //m_shaderWP->draw(m_FBOSSAO->getColorTexId(m_FBOColorSSAO)); //MARCHE !
-    //glEnable(GL_DEPTH_TEST);
     //m_shaderWP->draw(0);
     //m_FBO->draw(m_FBOColor); //MARCHE !
     m_FBOSSAO->draw(m_FBOColorSSAO); //MARCHE !

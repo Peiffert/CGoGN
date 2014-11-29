@@ -25,6 +25,9 @@
 #include <GL/glew.h>
 #include "Utils/Shaders/shaderSSAO.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_projection.hpp"
+
 namespace CGoGN
 {
 
@@ -37,9 +40,11 @@ namespace Utils
 
 ShaderSSAO::ShaderSSAO(bool doubleSided)
 {
+
+    sm_isInitialized = false;
+
     m_nameVS = "ShaderSSAO_vs";
     m_nameFS = "ShaderSSAO_fs";
-//	m_nameGS = "ShaderSSAO_gs";
 
     // get choose GL defines (2 or 3)
     // ans compile shaders
@@ -52,42 +57,10 @@ ShaderSSAO::ShaderSSAO(bool doubleSided)
 
     loadShadersFromMemory(glxvert.c_str(), glxfrag.c_str());
 
-
-
     // and get and fill uniforms
     getLocations();
     sendParams();
 
-    m_vboPos = new Utils::VBO();
-    m_vboPos->setDataSize(3);
-    m_vboPos->allocate(4);
-    Geom::Vec3f* ptrPos = reinterpret_cast<Geom::Vec3f*>(m_vboPos->lockPtr());
-
-    ptrPos[0] = Geom::Vec3f(-1,-1, 0.9999999f);
-    ptrPos[1] = Geom::Vec3f( 1,-1, 0.9999999f);
-    ptrPos[2] = Geom::Vec3f( 1, 1, 0.9999999f);
-    ptrPos[3] = Geom::Vec3f(-1, 1, 0.9999999f);
-
-    m_vboPos->releasePtr();
-
-    bindVA_VBO("VertexPosition", m_vboPos);
-
-    m_vboTexCoord = new Utils::VBO();
-    m_vboTexCoord->setDataSize(2);
-
-    m_vboTexCoord = new Utils::VBO();
-    m_vboTexCoord->setDataSize(2);
-    m_vboTexCoord->allocate(4);
-    Geom::Vec2f* ptrTex = reinterpret_cast<Geom::Vec2f*>(m_vboTexCoord->lockPtr());
-
-    ptrTex[0] = Geom::Vec2f(0.0,0.0);
-    ptrTex[1] = Geom::Vec2f(1.0,0.0);
-    ptrTex[2] = Geom::Vec2f(1.0,1.0);
-    ptrTex[3] = Geom::Vec2f(0.0,1.0);
-
-    m_vboTexCoord->releasePtr();
-
-    bindVA_VBO("VertexTexCoord", m_vboTexCoord);
 }
 
 void ShaderSSAO::getLocations()
@@ -97,17 +70,13 @@ void ShaderSSAO::getLocations()
     *m_unif_ssaoPower = glGetUniformLocation(this->program_handler(), "uPower");
     *m_unif_ssaoKernelSize = glGetUniformLocation(this->program_handler(), "uKernelSize");
     *m_unif_kernel = glGetUniformLocation(this->program_handler(), "uKernelOffsets");
-    *m_unif_FBOTextureNormal = glGetUniformLocation(this->program_handler(), "FBOTextureNormal");
+    //*m_unif_FBOTextureNormal = glGetUniformLocation(this->program_handler(), "FBOTextureNormal");
     unbind();
 }
 
 void ShaderSSAO::sendParams()
 {
     bind();
-    //glUniform4fv(*m_unif_ambiant,  1, m_ambiant.data());
-    //glUniform4fv(*m_unif_diffuse,  1, m_diffuse.data());
-    //glUniform3fv(*m_unif_lightPos, 1, m_lightPos.data());
-
     glUniform1f(*m_unif_ssaoRadius,  m_ssaoRadius);
     glUniform1f(*m_unif_ssaoPower,  m_ssaoPower);
     glUniform1i(*m_unif_ssaoKernelSize, m_ssaoKernelSize);
@@ -118,6 +87,7 @@ void ShaderSSAO::sendParams()
 
 void ShaderSSAO::setFBOTextureNormal(CGoGNGLuint texId)
 {
+    texNormalId = texId;
     bind();
     glBindTexture(GL_TEXTURE_2D, *texId);
     glUniform1i(*m_unif_FBOTextureNormal, 0);
@@ -140,6 +110,85 @@ void ShaderSSAO::restoreUniformsAttribs()
     sendParams();
     bindVA_VBO("VertexPosition", m_vboPos);
     bindVA_VBO("VertexTexCoord", m_vboTexCoord);
+}
+
+
+void ShaderSSAO::drawSSAO()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // Check if TextureSticker's elements have been initialized before
+    if (!sm_isInitialized)
+    {
+        sm_quadPositionsVbo = new Utils::VBO();
+        sm_quadTexCoordsVbo = new Utils::VBO();
+        sm_quadPositionsVbo->setDataSize(3);
+        sm_quadTexCoordsVbo->setDataSize(2);
+        sm_quadPositionsVbo->allocate(4);
+        sm_quadTexCoordsVbo->allocate(4);
+
+        GLfloat positions[] = {
+            -1.0f, -1.0f, 0.0f,
+            +1.0f, -1.0f, 0.0f,
+            +1.0f, +1.0f, 0.0f,
+            -1.0f, +1.0f, 0.0f
+            };
+        GLfloat texCoords[] = {
+            0.0f, 0.0f,
+            1.0f, 0.0f,
+            1.0f, 1.0f,
+            0.0f, 1.0f
+            };
+
+        GLfloat* positionsPtr = (GLfloat*) sm_quadPositionsVbo->lockPtr();
+        memcpy(positionsPtr, positions, 3 * 4 * sizeof(GLfloat));
+        sm_quadPositionsVbo->releasePtr();
+        GLfloat* texCoordsPtr = (GLfloat*) sm_quadTexCoordsVbo->lockPtr();
+        memcpy(texCoordsPtr, texCoords, 2 * 4 * sizeof(GLfloat));
+        sm_quadTexCoordsVbo->releasePtr();
+
+        // Initialize simple texture mapping shader
+        m_unif_FBOTextureNormal = glGetUniformLocation(this->program_handler(), "FBOTextureNormal");
+
+        bindVA_VBO("VertexPosition", sm_quadPositionsVbo);
+
+        bindVA_VBO("VertexTexCoord", sm_quadTexCoordsVbo);
+
+        sm_isInitialized = true;
+    }
+
+    // Check if depth test is enabled
+    GLboolean wasDepthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+
+    // Disable depth test if it was enabled
+    if (wasDepthTestEnabled == GL_TRUE)
+        glDisable(GL_DEPTH_TEST);
+
+    // Bind texture mapping shader
+    bind();
+
+    // Set texture uniform
+    glUniform1i(*m_unif_FBOTextureNormal, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, *m_unif_FBOTextureNormal);
+
+    // Set matrices uniforms
+    glm::mat4 projMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+    glm::mat4 viewMatrix(1.0f);
+    updateMatrices(projMatrix, viewMatrix);
+
+
+    // Draw quad
+    enableVertexAttribs();
+    glDrawArrays(GL_QUADS, 0, 4);
+    disableVertexAttribs();
+
+    // Unbind texture mapping shader
+    unbind();
+
+    // Re-enable depth test if it was enabled before
+    if (wasDepthTestEnabled == GL_TRUE)
+        glEnable(GL_DEPTH_TEST);
 }
 
 void ShaderSSAO::generateSsaoTexNoise() {
