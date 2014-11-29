@@ -59,7 +59,7 @@ ShaderSSAO::ShaderSSAO(bool doubleSided)
 
     // and get and fill uniforms
     getLocations();
-    sendParams();
+    //sendParams();
 
 }
 

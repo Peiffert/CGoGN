@@ -27,9 +27,9 @@ void main()
     vec3 vRot = cross(vZ, vNormal);
     float aRot = acos(dot(vZ, vNormal));
     mat3 mRot = mat3(
-        pow(vRot[0],2)+(1.0-pow(vRot[0],2))*cos(aRot), vRot[0]*vRot[1]*(1.0-cos(aRot))-vRot[2]*sin(aRot), vRot[0]*vRot[2]*(1.0-cos(aRot))+vRot[1]*sin(aRot),
-        vRot[0]*vRot[1]*(1.0-cos(aRot))+vRot[2]*sin(aRot), pow(vRot[1],2)+(1.0-pow(vRot[1],2))*cos(aRot), vRot[1]*vRot[2]*(1.0-cos(aRot))-vRot[0]*sin(aRot),
-        vRot[0]*vRot[2]*(1.0-cos(aRot))-vRot[1]*sin(aRot), vRot[1]*vRot[2]*(1.0-cos(aRot))+vRot[0]*sin(aRot), pow(vRot[2],2)+(1.0-pow(vRot[2],2))*cos(aRot)
+        vRot[0]*vRot[0]+(1.0-vRot[0])*cos(aRot), vRot[0]*vRot[1]*(1.0-cos(aRot))-vRot[2]*sin(aRot), vRot[0]*vRot[2]*(1.0-cos(aRot))+vRot[1]*sin(aRot),
+        vRot[0]*vRot[1]*(1.0-cos(aRot))+vRot[2]*sin(aRot), vRot[1]+(1.0-vRot[1]*vRot[1])*cos(aRot), vRot[1]*vRot[2]*(1.0-cos(aRot))-vRot[0]*sin(aRot),
+        vRot[0]*vRot[2]*(1.0-cos(aRot))-vRot[1]*sin(aRot), vRot[1]*vRot[2]*(1.0-cos(aRot))+vRot[0]*sin(aRot), vRot[2]*vRot[2]+(1.0-vRot[2]*vRot[2])*cos(aRot)
         );
 
     // Scale factor
@@ -52,7 +52,8 @@ void main()
             float depth = texture2D(FBOTextureNormal, vec2(samplePoint[0],samplePoint[1]))[3];
             if(depth<samplePoint[2])
             {
-                occlusion = occlusion + 1.0/float(uKernelSize);
+                occlusion = 1.0;
+                //occlusion = occlusion + 1.0/float(uKernelSize);
             }
         }
     }
