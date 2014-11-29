@@ -180,14 +180,14 @@ void Viewer::cb_redraw()
     m_FBOZDepth->unbind();*/
 
     // Dessin de normals
-    //m_FBONormal->bind();
-    //m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
-    //m_FBONormal->unbind();
+    m_FBONormal->bind();
+    m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
+    m_FBONormal->unbind();
 
     // Dessin de normals
-    /*m_FBOSSAO->bind();
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    /*m_SSAOShader->bind();
+    m_FBOSSAO->bind();
+    /*glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    //m_SSAOShader->bind();
     // TODO : /!\ Pas forcément GL_TEXTURE_2D A vérifier
     glBindTexture(GL_TEXTURE_2D, m_FBO->getColorTexId(m_FBOColorZDepth));
     glUniform1i(m_u_FBOTexture, 0);
@@ -195,14 +195,15 @@ void Viewer::cb_redraw()
     glUniform1i(m_u_FBOTexture, 1);
     m_SSAOShader->unbind();
     */
-    //m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
-    //m_FBOSSAO->unbind();
+    m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
+    m_FBOSSAO->unbind();
 
     //glDisable(GL_DEPTH_TEST);
     //m_shaderWP->draw(m_FBOSSAO->getColorTexId(m_FBOColorSSAO)); //MARCHE !
     //glEnable(GL_DEPTH_TEST);
     //m_shaderWP->draw(0);
-    m_FBO->draw(m_FBOColor); //MARCHE !
+    //m_FBO->draw(m_FBOColor); //MARCHE !
+    m_FBOSSAO->draw(m_FBOColorSSAO); //MARCHE !
 
     //m_FBO->drawWithDepth(m_FBOColor); //MARCHE !
     //m_FBO->drawWithDepth(m_FBOColor,m_FBO->getDepthTexId());

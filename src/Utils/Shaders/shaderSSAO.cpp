@@ -35,9 +35,7 @@ namespace Utils
 #include "shaderSSAO.frag"
 
 
-ShaderSSAO::ShaderSSAO(bool doubleSided):
-    m_vboPos(NULL),
-    m_vboColor(NULL)
+ShaderSSAO::ShaderSSAO(bool doubleSided)
 {
     m_nameVS = "ShaderSSAO_vs";
     m_nameFS = "ShaderSSAO_fs";
@@ -54,9 +52,42 @@ ShaderSSAO::ShaderSSAO(bool doubleSided):
 
     loadShadersFromMemory(glxvert.c_str(), glxfrag.c_str());
 
+
+
     // and get and fill uniforms
     getLocations();
     sendParams();
+
+    m_vboPos = new Utils::VBO();
+    m_vboPos->setDataSize(3);
+    m_vboPos->allocate(4);
+    Geom::Vec3f* ptrPos = reinterpret_cast<Geom::Vec3f*>(m_vboPos->lockPtr());
+
+    ptrPos[0] = Geom::Vec3f(-1,-1, 0.9999999f);
+    ptrPos[1] = Geom::Vec3f( 1,-1, 0.9999999f);
+    ptrPos[2] = Geom::Vec3f( 1, 1, 0.9999999f);
+    ptrPos[3] = Geom::Vec3f(-1, 1, 0.9999999f);
+
+    m_vboPos->releasePtr();
+
+    bindVA_VBO("VertexPosition", m_vboPos);
+
+    m_vboTexCoord = new Utils::VBO();
+    m_vboTexCoord->setDataSize(2);
+
+    m_vboTexCoord = new Utils::VBO();
+    m_vboTexCoord->setDataSize(2);
+    m_vboTexCoord->allocate(4);
+    Geom::Vec2f* ptrTex = reinterpret_cast<Geom::Vec2f*>(m_vboTexCoord->lockPtr());
+
+    ptrTex[0] = Geom::Vec2f(0.0,0.0);
+    ptrTex[1] = Geom::Vec2f(1.0,0.0);
+    ptrTex[2] = Geom::Vec2f(1.0,1.0);
+    ptrTex[3] = Geom::Vec2f(0.0,1.0);
+
+    m_vboTexCoord->releasePtr();
+
+    bindVA_VBO("VertexTexCoord", m_vboTexCoord);
 }
 
 void ShaderSSAO::getLocations()
@@ -107,12 +138,8 @@ void ShaderSSAO::restoreUniformsAttribs()
 {
     getLocations();
     sendParams();
-
-    bind();
     bindVA_VBO("VertexPosition", m_vboPos);
-    if (m_vboColor)
-        bindVA_VBO("VertexColor", m_vboColor);
-    unbind();
+    bindVA_VBO("VertexTexCoord", m_vboTexCoord);
 }
 
 void ShaderSSAO::generateSsaoTexNoise() {

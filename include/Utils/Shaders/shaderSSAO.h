@@ -54,6 +54,10 @@ protected:
     CGoGNGLuint m_unif_kernel;
     CGoGNGLuint m_unif_noiseTex;
 
+    /* VBO for input texture*/
+    VBO* m_vboPos;
+    VBO* m_vboTexCoord;
+
     //values
     float m_ssaoRadius;
     float m_ssaoPower;
@@ -66,8 +70,8 @@ protected:
     // Noise
     int m_ssaoNoiseSize;
 
-    VBO* m_vboPos;
-    VBO* m_vboColor;
+    /*VBO* m_vboPos;
+    VBO* m_vboColor;*/
 
     void getLocations();
 
