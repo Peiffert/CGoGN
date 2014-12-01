@@ -124,6 +124,7 @@ void Viewer::cb_initGL()
 
     // Normal Shader
     m_normalShader = new Utils::ShaderSimpleNormal() ;
+    m_normalShader->setAttributePosition(m_positionVBO) ;
 
     // SSAO Shader
     m_SSAOShader = new Utils::ShaderSSAO() ;

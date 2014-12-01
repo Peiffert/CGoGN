@@ -52,8 +52,8 @@ void main()
             float depth = texture2D(FBOTextureNormal, vec2(samplePoint[0],samplePoint[1]))[3];
             if(depth<samplePoint[2])
             {
-                occlusion = 1.0;
-                //occlusion = occlusion + 1.0/float(uKernelSize);
+                //occlusion = 1.0;
+                occlusion = occlusion + 1.0/float(uKernelSize);
             }
         }
     }
