@@ -206,19 +206,13 @@ void ShaderSSAO::resizeSsaoKernel() {
     //	generate kernel:
     m_kernel = new Geom::Vec3f[m_ssaoKernelSize];
     for (int i = 0; i < m_ssaoKernelSize; ++i) {
-        // On choisit un point dans le "cylindre"
+        // On choisit un point dans le "cube"
         m_kernel[i] = Geom::Vec3f(
             (float)(rand()%200001)/100000.0f - 1.0f, // entre -1 et 1
             (float)(rand()%200001)/100000.0f - 1.0f, // entre -1 et 1
             (float)(rand()%100001)/100000.0f); // entre 0 et 1
-        // On normalise pour transformer le "cylindre" en sphère
-        m_kernel[i].normalize();
-
-        // On améliore la distribution ??
-        float scale = (float)i / (float)m_ssaoKernelSize;
-
-        // lerp(start, stop, amt(entre 0 et 1)) = retourne (stop-start)*amp
-        m_kernel[i] *= (1.0f-0.1f)*scale*scale;
+        if(1.0f<m_kernel[i].norm())
+            i--;
     }
 }
 
