@@ -17,10 +17,9 @@ FRAG_OUT_DEF;
 
 void main()
 {
-    gl_FragColor = texture2D(FBOTextureNormal, texCoord);
     // Normal and depth from uniform texture
     vec3 vNormal = vec3 (texture2D(FBOTextureNormal, texCoord));
-    float depth = texture2D(FBOTextureNormal, texCoord)[3];
+    /*float depth = texture2D(FBOTextureNormal, texCoord)[3];
 
     // Rotation matrix
     vec3 vZ = vec3(0.0,0.0,1.0);
@@ -40,9 +39,12 @@ void main()
     //vec2 position = 2*texCoord -vec2(1,1); NOT NEEDED
 
     float occlusion = 0.0;
-
+    vec3 resultTemp=vec3(0.0,0.0,0.0);
     //For each point of the half-sphere
-    for (int i = 0; i < uKernelSize; i++) {
+    for (int i = 0; i < 1; i++) {
+        resultTemp+=uKernelOffsets[i];
+    }*/
+        /*
         //Compute its location
         //vec3 samplePoint = position + mRot * mScale * uKernelOffsets[i]; NOT NEEDED
         //Compute equivalent coordinates on depth texture NOT NEEDED
@@ -54,14 +56,14 @@ void main()
         //{
             //Depth on the texture at the sample position
             float depth = 0.0;//texture2D(FBOTextureNormal, vec2(samplePoint[0],samplePoint[1]))[3];
-            samplePoint[2] = 1.0;
+            //samplePoint[2] = 1.0;
             if(depth<samplePoint[2])
             {
                 //occlusion = 1.0;
                 occlusion = occlusion + 1.0/float(uKernelSize);
             }
         //}
-    }
+    }*/
 
     //gl_FragColor = vec4((vNormal[0]+1.0)/2.0*(1.0-occlusion),(vNormal[1]+1.0)/2.0*(1.0-occlusion),(vNormal[2]+1.0)/2.0*(1.0-occlusion),0.0);
     gl_FragColor = vec4((vNormal[0]+1.0)/2.0,(vNormal[1]+1.0)/2.0,(vNormal[2]+1.0)/2.0,0.0);

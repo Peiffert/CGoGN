@@ -51,8 +51,6 @@ ShaderSSAO::ShaderSSAO(bool doubleSided)
     std::string glxvert(*GLSLShader::DEFINES_GL);
     glxvert.append(vertexShaderText);
     std::string glxfrag(*GLSLShader::DEFINES_GL);
-    if (doubleSided)
-        glxfrag.append("#define DOUBLE_SIDED\n");
     glxfrag.append(fragmentShaderText);
 
     loadShadersFromMemory(glxvert.c_str(), glxfrag.c_str());
@@ -70,7 +68,7 @@ void ShaderSSAO::getLocations()
     *m_unif_ssaoPower = glGetUniformLocation(this->program_handler(), "uPower");
     *m_unif_ssaoKernelSize = glGetUniformLocation(this->program_handler(), "uKernelSize");
     *m_unif_kernel = glGetUniformLocation(this->program_handler(), "uKernelOffsets");
-    //*m_unif_FBOTextureNormal = glGetUniformLocation(this->program_handler(), "FBOTextureNormal");
+    *m_unif_FBOTextureNormal = glGetUniformLocation(this->program_handler(), "FBOTextureNormal");
     unbind();
 }
 
@@ -168,9 +166,10 @@ void ShaderSSAO::drawSSAO()
     bind();
 
     // Set texture uniform
-    glUniform1i(*m_unif_FBOTextureNormal, 0);
+	glUniform1i(*m_unif_FBOTextureNormal, 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *m_unif_FBOTextureNormal);
+	glBindTexture(GL_TEXTURE_2D, *texNormalId);
+				  //m_unif_FBOTextureNormal);
 
     // Set matrices uniforms
     glm::mat4 projMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
