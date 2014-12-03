@@ -170,7 +170,7 @@ void ShaderSSAO::drawSSAO()
     // Set texture uniform
     glUniform1i(*m_unif_FBOTextureNormal, 0);
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, *m_unif_FBOTextureNormal);
+    glBindTexture(GL_TEXTURE_2D, *texNormalId);
 
     // Set matrices uniforms
     glm::mat4 projMatrix = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);

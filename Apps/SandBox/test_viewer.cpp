@@ -81,120 +81,102 @@ void Viewer::initGUI()
 void Viewer::cb_initGL()
 {
     Utils::GLSLShader::setCurrentOGLVersion(2) ;
-	CGoGNout << "GL VERSION = "<< glGetString(GL_VERSION)<< CGoGNendl;
-	Utils::GLSLShader::areShadersSupported();
+      CGoGNout << "GL VERSION = "<< glGetString(GL_VERSION)<< CGoGNendl;
+      Utils::GLSLShader::areShadersSupported();
 
-	m_render = new Algo::Render::GL2::MapRender() ;
-	m_topoRender = new Algo::Render::GL2::TopoRender() ;
+      m_render = new Algo::Render::GL2::MapRender() ;
+      m_topoRender = new Algo::Render::GL2::TopoRender() ;
 
-	m_topoRender->setInitialDartsColor(0.25f, 0.25f, 0.25f) ;
+      m_topoRender->setInitialDartsColor(0.25f, 0.25f, 0.25f) ;
 
-    m_positionVBO = new Utils::VBO() ;
-	m_normalVBO = new Utils::VBO() ;
-
-
-    m_FBO = new Utils::FBO(1024,1024) ;
-    m_FBOColor = m_FBO->createAttachColorTexture(GL_RGB, GL_LINEAR);
-    m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
-
-    m_FBONormal = new Utils::FBO(1024,1024) ;
-    m_FBOColorNormal = m_FBONormal->createAttachColorTexture(GL_RGBA32F, GL_LINEAR);
-
-    m_FBOSSAO = new Utils::FBO(1024,1024) ;
-    m_FBOColorSSAO = m_FBOSSAO->createAttachColorTexture(GL_RGB, GL_LINEAR);
-    m_FBODepthSSAO = m_FBOSSAO->createAttachDepthTexture(GL_LINEAR);
-
-    // Phong Shader (lumière par interpolation pixels)
-	m_phongShader = new Utils::ShaderPhong() ;
-    //m_ph+ongShader->defines_Geom('0',);// FAUX Ceci permet dire où faire le rendu (layout)
-	m_phongShader->setAttributePosition(m_positionVBO) ;
-	m_phongShader->setAttributeNormal(m_normalVBO) ;
-	m_phongShader->setAmbiant(colClear) ;
-	m_phongShader->setDiffuse(colDif) ;
-	m_phongShader->setSpecular(colSpec) ;
-	m_phongShader->setShininess(shininess) ;
-
-    // Flat Shader (lumière par face)
-	m_flatShader = new Utils::ShaderSimpleFlat() ;
-	m_flatShader->setAttributePosition(m_positionVBO) ;
-	m_flatShader->setAmbiant(colClear) ;
-	m_flatShader->setDiffuse(colDif) ;
-//	m_flatShader->setDiffuseBack(Geom::Vec4f(0,0,0,0)) ;
-//	m_flatShader->setExplode(faceShrinkage) ;
-
-    // Normal Shader
-    m_normalShader = new Utils::ShaderSimpleNormal() ;
-    m_normalShader->setAttributePosition(m_positionVBO) ;
-
-    // SSAO Shader
-    m_SSAOShader = new Utils::ShaderSSAO() ;
-    m_SSAOShader->setParams(1.5f, 2.0f, 10, 3);
-    m_SSAOShader->setFBOTextureNormal(m_FBONormal->getColorTexId(m_FBOColorNormal)) ;
-
-    // Affichage FBO
-    m_shaderWP = new Utils::ShaderWallPaper();
-    m_shaderWP->setTextureUnit(m_FBOColor);
+      m_positionVBO = new Utils::VBO() ;
+      m_normalVBO = new Utils::VBO() ;
 
 
-    std::cout << "COUCOU1"<< std::endl;
-    registerShader(m_phongShader) ;
-    registerShader(m_flatShader) ;
-    registerShader(m_normalShader) ;
-    registerShader(m_SSAOShader) ;
-    registerShader(m_shaderWP);
+      m_FBO = new Utils::FBO(1024,1024) ;
+      m_FBOColor = m_FBO->createAttachColorTexture(GL_RGB, GL_LINEAR);
+      m_FBODepth = m_FBO->createAttachDepthTexture(GL_LINEAR);
 
-    glEnable(GL_TEXTURE_2D);
+      m_FBONormal = new Utils::FBO(1024,1024) ;
+      m_FBOColorNormal = m_FBONormal->createAttachColorTexture(GL_RGBA32F, GL_LINEAR);
+      m_FBODepthNormal = m_FBONormal->createAttachDepthTexture(GL_LINEAR);
+
+      m_FBOSSAO = new Utils::FBO(1024,1024) ;
+      m_FBOColorSSAO = m_FBOSSAO->createAttachColorTexture(GL_RGB, GL_LINEAR);
+      m_FBODepthSSAO = m_FBOSSAO->createAttachDepthTexture(GL_LINEAR);
+
+      // Phong Shader (lumière par interpolation pixels)
+      m_phongShader = new Utils::ShaderPhong() ;
+      //m_ph+ongShader->defines_Geom('0',);// FAUX Ceci permet dire où faire le rendu (layout)
+      m_phongShader->setAttributePosition(m_positionVBO) ;
+      m_phongShader->setAttributeNormal(m_normalVBO) ;
+      m_phongShader->setAmbiant(colClear) ;
+      m_phongShader->setDiffuse(colDif) ;
+      m_phongShader->setSpecular(colSpec) ;
+      m_phongShader->setShininess(shininess) ;
+
+      // Flat Shader (lumière par face)
+      m_flatShader = new Utils::ShaderSimpleFlat() ;
+      m_flatShader->setAttributePosition(m_positionVBO) ;
+      m_flatShader->setAmbiant(colClear) ;
+      m_flatShader->setDiffuse(colDif) ;
+  //	m_flatShader->setDiffuseBack(Geom::Vec4f(0,0,0,0)) ;
+  //	m_flatShader->setExplode(faceShrinkage) ;
+
+      // Normal Shader
+      m_normalShader = new Utils::ShaderSimpleNormal() ;
+      m_normalShader->setAttributePosition(m_positionVBO) ;
+
+      // SSAO Shader
+      m_SSAOShader = new Utils::ShaderSSAO() ;
+      m_SSAOShader->setParams(0.3f, 2.0f, 100, 3);
+      m_SSAOShader->setFBOTextureNormal(m_FBONormal->getColorTexId(m_FBOColorNormal)) ;
+
+      // Affichage FBO
+      m_shaderWP = new Utils::ShaderWallPaper();
+      m_shaderWP->setTextureUnit(m_FBOColor);
+
+
+      std::cout << "COUCOU1"<< std::endl;
+      registerShader(m_phongShader) ;
+      registerShader(m_flatShader) ;
+      registerShader(m_normalShader) ;
+      registerShader(m_SSAOShader) ;
+      registerShader(m_shaderWP);
+
+      glEnable(GL_TEXTURE_2D);
 }
 
 // Dessin 3D
 void Viewer::cb_redraw()
 {
-    m_FBO->bind();
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-    if(m_drawFaces)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL) ;
-        glEnable(GL_LIGHTING) ;
-        glEnable(GL_POLYGON_OFFSET_FILL) ;
-        glPolygonOffset(1.0f, 1.0f) ;
-        glDepthFunc(GL_LESS);
-        switch(m_renderStyle)
-        {
-            case FLAT :
-                m_render->draw(m_flatShader, Algo::Render::GL2::TRIANGLES) ;
-                break ;
-            case PHONG :
-                m_render->draw(m_phongShader, Algo::Render::GL2::TRIANGLES) ;
-                break ;
-            case SSAO :
-                m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
-            break ;
-        }
-        glDisable(GL_POLYGON_OFFSET_FILL) ;
-    }
-
-    m_FBO->unbind();
-
     // Dessin de normals
-    m_FBONormal->bind();
-    m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
-    m_FBONormal->unbind();
+       m_FBONormal->bind();
+       glEnable(GL_DEPTH_BUFFER);
+       glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+       m_render->draw(m_normalShader, Algo::Render::GL2::TRIANGLES) ;
+       m_FBONormal->unbind();
 
-    // Dessin de SSAO
-    m_FBOSSAO->bind();
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    //m_render->draw(m_SSAOShader, Algo::Render::GL2::TRIANGLES) ;
-    m_SSAOShader->drawSSAO();
-    m_FBOSSAO->unbind();
+   //	m_shaderWP->draw( m_FBONormal->getColorTexId(m_FBOColorNormal));
 
-    //m_shaderWP->draw(m_FBOSSAO->getColorTexId(m_FBOColorSSAO)); //MARCHE !
-    //m_shaderWP->draw(0);
-    //m_FBO->draw(m_FBOColor); //MARCHE !
-    m_FBOSSAO->draw(m_FBOColorSSAO); //MARCHE !
+   //    // Dessin de SSAO
+       m_FBOSSAO->bind();
 
-    //m_FBO->drawWithDepth(m_FBOColor); //MARCHE !
-    //m_FBO->drawWithDepth(m_FBOColor,m_FBO->getDepthTexId());
+       glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+       glDisable(GL_DEPTH_BUFFER);
+
+       m_SSAOShader->drawSSAO();
+   //	m_shaderWP->draw(m_FBONormal->getColorTexId(m_FBOColorNormal)); //MARCHE !
+       m_FBOSSAO->unbind();
+
+       m_shaderWP->draw(m_FBOSSAO->getColorTexId(m_FBOColorSSAO)); //MARCHE !
+
+   //    //m_shaderWP->draw(0);
+   //    //m_FBO->draw(m_FBOColor); //MARCHE !
+   //    m_FBOSSAO->draw(m_FBOColorSSAO); //MARCHE !
+
+       //m_FBO->drawWithDepth(m_FBOColor); //MARCHE !
+       //m_FBO->drawWithDepth(m_FBOColor,m_FBO->getDepthTexId());
 }
 //
 

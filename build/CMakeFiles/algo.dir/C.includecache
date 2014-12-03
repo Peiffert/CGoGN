@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/Algo/Import/ply.h
+stdio.h
+-
+stddef.h
+-
+
+/home/gpeiffert/Desktop/CGoGN-master/src/Algo/Import/ply.c
+stdio.h
+-
+stdlib.h
+-
+math.h
+-
+string.h
+-
+Algo/Import/ply.h
+/home/gpeiffert/Desktop/CGoGN-master/src/Algo/Import/Algo/Import/ply.h
+

@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../lib/Debug/libalgo.a  CMakeFiles/algo.dir/src/Algo/Import/importPlyData.cpp.o CMakeFiles/algo.dir/src/Algo/ImplicitHierarchicalMesh/ihm3.cpp.o CMakeFiles/algo.dir/src/Algo/Render/topoGenRender.cpp.o CMakeFiles/algo.dir/src/Algo/Render/mapRender.cpp.o CMakeFiles/algo.dir/src/Algo/Histogram/histogram.cpp.o CMakeFiles/algo.dir/src/Algo/MC/tables.cpp.o CMakeFiles/algo.dir/src/Algo/Import/ply.c.o
+/usr/bin/ranlib ../lib/Debug/libalgo.a

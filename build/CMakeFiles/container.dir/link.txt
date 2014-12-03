@@ -1,0 +1,2 @@
+/usr/bin/ar cr ../lib/Release/libcontainer.a  CMakeFiles/container.dir/src/Container/attributeContainer.cpp.o CMakeFiles/container.dir/src/Container/holeblockref.cpp.o
+/usr/bin/ranlib ../lib/Release/libcontainer.a
